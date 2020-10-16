@@ -1,0 +1,35 @@
+{
+    "name": "kovey/http-server",
+    "type": "library",
+    "description": "Http Server Of The Kovey Framework",
+    "keywords": [
+        "framework",
+        "kovey",
+        "http",
+        "server",
+        "php"
+    ],
+    "license": "Apache-2.0",
+    "authors": [
+        {
+            "name": "Kovey",
+            "email": "kovey@vip.qq.com",
+            "role": "developer"
+        }
+    ],
+    "require": {
+        "php": ">=8.0",
+        "ext-swoole": ">=4.4",
+        "ext-json": ">=1.7",
+        "kovey/library": "^1.0",
+        "kovey/connection": "^1.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "Kovey\\Web\\": "src/"
+        }
+    }
+}
