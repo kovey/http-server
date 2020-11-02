@@ -46,7 +46,7 @@ class Response implements ResponseInterface
 	 *
 	 * @var string
 	 */
-    private string $body;
+    private string $body = '';
 
 	/**
 	 * @description 构造

@@ -16,9 +16,9 @@ class Autoload
 	/**
 	 * @description 自定义加载目录
 	 *
-	 * @var string
+	 * @var Array
 	 */
-	private string $customs;
+	private Array $customs;
 
 	/**
 	 * @description 控制器所在mulu

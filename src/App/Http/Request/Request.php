@@ -92,28 +92,28 @@ class Request implements RequestInterface
 	 *
 	 * @var Array
 	 */
-	private Array $post;
+	private Array $post = array();
 
 	/**
 	 * @description GET请求参数
 	 *
 	 * @var Array
 	 */
-    private Array $get;
+    private Array $get = array();
 
 	/**
 	 * @description PUT请求参数
 	 *
 	 * @var Array
 	 */
-	private Array $put;
+	private Array $put = array();
 
 	/**
 	 * @description DELETE 请求参数
 	 *
 	 * @var Array
 	 */
-	private Array $delete;
+	private Array $delete = array();
 
 	/**
 	 * @description 绘画
@@ -168,7 +168,7 @@ class Request implements RequestInterface
 		$cType = explode(';', $this->req->header['content-type'] ?? '')[0];
 		$method = $this->getMethod();
 		if ($cType === 'application/json') {
-			$data = Json::decode($this->req->rawContent());
+			$data = Json::decode($this->req->getContent());
 			if (empty($data)) {
 				$data = array();
 			}
@@ -226,7 +226,7 @@ class Request implements RequestInterface
 	 */
     public function isWebSocket() : bool
     {
-        return isset($this->header['Upgrade']) && strtolower($this->header['Upgrade']) == 'websocket';
+        return isset($this->req->header['upgrade']) && strtolower($this->req->header['upgrade']) == 'websocket';
     }
 
 	/**
@@ -338,7 +338,9 @@ class Request implements RequestInterface
             $os = 'SunOS';
         } else if (preg_match('/ibm/i', $agent) && preg_match('/os/i', $agent)) {
             $os = 'IBM OS/2';
-        } else if (preg_match('/Mac/i', $agent) && preg_match('/PC/i', $agent)) {
+        } else if (preg_match('/Macintosh/i', $agent)
+            || (preg_match('/Mac/i', $agent) && preg_match('/OS X/i', $agent))
+        ) {
             $os = 'Macintosh';
         } else if (preg_match('/PowerPC/i', $agent)) {
             $os = 'PowerPC';
@@ -538,7 +540,7 @@ class Request implements RequestInterface
 	 */
 	public function getPhpinput() : string
 	{
-		return $this->req->rawContent();
+		return $this->req->getContent();
 	}
 
 	/**
@@ -599,9 +601,9 @@ class Request implements RequestInterface
     /**
      * @description process cors
      *
-     * @return ResponseInterface
+     * @return RequestInterface
      */
-    public function processCors() : ResponseInterface
+    public function processCors() : RequestInterface
     {
 		switch (strtolower($this->getMethod())) {
 			case 'get':

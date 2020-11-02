@@ -81,7 +81,7 @@ class Router implements RouterInterface
 	/**
 	 * @description 回调
 	 *
-	 * @var callable
+	 * @var callable | Array
 	 */
 	private $callable;
 
@@ -94,7 +94,7 @@ class Router implements RouterInterface
 	 *
 	 * @return Router
 	 */
-	public function __construct(string $uri, $fun = null)
+	public function __construct(string $uri, callable | array $fun = null)
 	{
 		$this->uri = str_replace('//', '/', $uri);
 		$this->middlewares = array();
@@ -118,6 +118,10 @@ class Router implements RouterInterface
 		$this->callable = null;
 
 		$this->parseRoute();
+        if (!$this->isValid) {
+            return;
+        }
+
 		$this->className = str_replace('/', '\\', $this->classPath) . '\\' . ucfirst($this->controller) . 'Controller';
 		$this->viewPath = strtolower($this->classPath) . '/' . strtolower($this->controller) . '/' . strtolower($this->action);
 		$this->classPath = $this->classPath . '/' . ucfirst($this->controller) . '.php';
@@ -283,7 +287,7 @@ class Router implements RouterInterface
 	 *
 	 * @return callable
 	 */
-	public function getCallable()
+	public function getCallable() : callable | Array | null
 	{
 		return $this->callable;
 	}

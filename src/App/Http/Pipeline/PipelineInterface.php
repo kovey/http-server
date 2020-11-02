@@ -11,7 +11,7 @@
  */
 namespace Kovey\Web\App\Http\Pipeline;
 
-use Kovey\Web\Container\ContainerInterface;
+use Kovey\Library\Container\ContainerInterface;
 use Kovey\Web\App\Http\Request\RequestInterface;
 use Kovey\Web\App\Http\Response\ResponseInterface;
 

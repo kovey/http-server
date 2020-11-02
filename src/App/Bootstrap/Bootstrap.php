@@ -45,7 +45,7 @@ class Bootstrap
 	 */
 	public function __initLogger(Application $app)
 	{
-		ko_change_process_name(Manager::get('app.process.name') . ' root');
+		ko_change_process_name(Manager::get('server.server.name') . ' root');
 		Logger::setLogPath(Manager::get('server.logger.info'), Manager::get('server.logger.exception'), Manager::get('server.logger.error'), Manager::get('server.logger.warning'));
 		Monitor::setLogDir(Manager::get('server.logger.monitor'));
 		Db::setLogDir(Manager::get('server.logger.db'));
@@ -113,7 +113,7 @@ class Bootstrap
 	 */
 	public function __initProcess(Application $app)
 	{
-		$app->registerProcess('kovey_config', (new Process\Config())->setProcessName(Manager::get('app.process.name') . ' config'));
+		$app->registerProcess('kovey_config', (new Process\Config())->setProcessName(Manager::get('server.server.name') . ' config'));
 		if (Manager::get('server.session.open') === 'On' && Manager::get('server.session.type') === 'file') {
 			$app->registerProcess('kovey_session', new ClearSession());
 		}

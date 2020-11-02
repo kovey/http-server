@@ -12,16 +12,16 @@
 namespace Kovey\Web\App\Http\Session;
 
 use Kovey\Library\Util\Json;
-use Kovey\Library\Pool\PoolInterface;
+use Kovey\Connection\Pool;
 
 class Cache implements SessionInterface
 {
 	/**
 	 * @description 内容
 	 *
-	 * @var string
+	 * @var Array
 	 */
-	private string $content;
+	private Array $content;
 
 	/**
 	 * @description 文件
@@ -35,7 +35,7 @@ class Cache implements SessionInterface
 	 *
 	 * @var PoolInterface
 	 */
-	private PoolInterface $pool;
+	private Pool $pool;
 
 	/**
 	 * @description 缓存见
@@ -53,7 +53,7 @@ class Cache implements SessionInterface
 	 *
 	 * @return Cache
 	 */
-	public function __construct(PoolInterface $pool, string $sessionId)
+	public function __construct(Pool $pool, string $sessionId)
 	{
 		$this->file = $sessionId;
 		$this->pool = $pool;
@@ -69,12 +69,11 @@ class Cache implements SessionInterface
 	 */
 	private function init()
 	{
-		$redis = $this->pool->getDatabase();
+		$redis = $this->pool->getConnection();
 		if (!$redis) {
 			return;
 		}
 		$file = $redis->get(self::SESSION_KEY . $this->file);
-		$this->pool->put($redis);
 		if ($file === false) {
 			$this->newSessionId();
 			return;
@@ -122,13 +121,12 @@ class Cache implements SessionInterface
 	private function saveToRedis()
 	{
 		go (function () {
-			$redis = $this->pool->getDatabase();
+			$redis = $this->pool->getConnection();
 			if (!$redis) {
 				return;
 			}
 
 			$redis->set(self::SESSION_KEY . $this->file, Json::encode($this->content));
-			$this->pool->put($redis);
 		});
 	}
 

@@ -30,7 +30,7 @@ class Controller implements ControllerInterface
 	 *
 	 * @var RequestInterface
 	 */
-	protected ResponseInterface $req;
+	protected RequestInterface $req;
 
 	/**
 	 * @description 插件
@@ -67,13 +67,11 @@ class Controller implements ControllerInterface
 	 *
 	 * @param ResponseInterface $res
 	 *
-	 * @param string $template
-	 *
 	 * @param Array $plugins
 	 *
 	 * @return ControllerInterface
 	 */
-	final public function __construct(RequestInterface $req, ResponseInterface $res, string $template, Array $plugins)
+	final public function __construct(RequestInterface $req, ResponseInterface $res, Array $plugins = array())
 	{
 		$this->isViewDisabled = false;
 		$this->isPluginDisabled = false;

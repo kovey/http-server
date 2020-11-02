@@ -25,13 +25,11 @@ interface  ControllerInterface
 	 *
 	 * @param ResponseInterface $res
 	 *
-	 * @param string $template
-	 *
 	 * @param Array $plugins
 	 *
 	 * @return ControllerInterface
 	 */
-	public function __construct(RequestInterface $req, ResponseInterface $res, string $template, Array $plugins);
+	public function __construct(RequestInterface $req, ResponseInterface $res, Array $plugins = array());
 
 	/**
 	 * @description 设置VIEW
@@ -61,7 +59,7 @@ interface  ControllerInterface
 	 *
 	 * @return RequestInterface
 	 */
-	public function getRequest() : ResponseInterface;
+	public function getRequest() : RequestInterface;
 
 	/**
 	 * @description 初始化插件
@@ -103,7 +101,7 @@ interface  ControllerInterface
 	 *
 	 * @return bool
 	 */
-	public function isPluginDisabled();
+	public function isPluginDisabled() : bool;
 
 	/**
 	 * @description 禁用插件

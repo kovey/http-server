@@ -353,7 +353,7 @@ class Server
 
         $body = $httpCode == ErrorTemplate::HTTP_CODE_200 ? $result['content'] : ErrorTemplate::getContent($httpCode);
         $response->end($body);
-        $this->monitor($begin, microtime(true), $request->server['request_uri'] ?? '/', $request->rawContent(), $request->server['remote_addr'] ?? '', $time, $httpCode, $body);
+        $this->monitor($begin, microtime(true), $request->server['request_uri'] ?? '/', $request->getContent(), $request->server['remote_addr'] ?? '', $time, $httpCode, $body);
     }
 
     /**
@@ -395,7 +395,11 @@ class Server
                 'response' => $body
             ));
         } catch (\Throwable $e) {
-            Logger::writeExceptionLog(__LINE__, __FILE__, $e);
+            if ($this->isRunDocker) {
+                Logger::writeExceptionLog(__LINE__, __FILE__, $e);
+            } else {
+                echo $e->getMessage() . PHP_EOL . $e->getTraceAsString();
+            }
         }
     }
 

@@ -24,7 +24,7 @@ interface RouterInterface
 	 *
 	 * @return RouterInterface
 	 */
-	public function __construct(string $uri, $fun = null);
+	public function __construct(string $uri, callable | array $fun = null);
 
 	/**
 	 * @description 获取action
@@ -96,7 +96,7 @@ interface RouterInterface
 	 *
 	 * @return callable
 	 */
-	public function getCallable();
+	public function getCallable() : callable | array | null;
 
 	/**
 	 * @description 获取URI

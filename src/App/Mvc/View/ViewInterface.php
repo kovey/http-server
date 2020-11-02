@@ -32,7 +32,7 @@ interface ViewInterface
 	 *
 	 * @return null
 	 */
-	public function setTemplate($template);
+	public function setTemplate(string $template);
 
 	/**
 	 * @description 页面渲染

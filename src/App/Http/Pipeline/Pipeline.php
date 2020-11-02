@@ -43,7 +43,7 @@ class Pipeline implements PipelineInterface
 	 *
 	 * @var ResponseInterface
 	 */
-	private RequestInterface $response;
+	private ResponseInterface $response;
 
 	/**
 	 * @description 构造

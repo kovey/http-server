@@ -43,7 +43,7 @@ class Route
 	 *
 	 * @return Router
 	 */
-	public static function get(string $uri, $fun = null) : Router
+	public static function get(string $uri, $fun = null) : RouterInterface
 	{
 		$router = new Router($uri, $fun);
 		self::$app->registerGetRouter($uri, $router);
@@ -59,7 +59,7 @@ class Route
 	 *
 	 * @return Router
 	 */
-	public static function post(string $uri, $fun = null) : Router
+	public static function post(string $uri, $fun = null) : RouterInterface
 	{
 		$router = new Router($uri, $fun);
 		self::$app->registerPostRouter($uri, $router);
@@ -75,7 +75,7 @@ class Route
 	 *
 	 * @return Router
 	 */
-	public static function put(string $uri, $fun = null) : Router
+	public static function put(string $uri, $fun = null) : RouterInterface
 	{
 		$router = new Router($uri, $fun);
 		self::$app->registerPutRouter($uri, $router);
@@ -91,7 +91,7 @@ class Route
 	 *
 	 * @return Router
 	 */
-	public static function delete(string $uri, $fun = null) : Router
+	public static function delete(string $uri, $fun = null) : RouterInterface
 	{
 		$router = new Router($uri, $fun);
 		self::$app->registerDelRouter($uri, $router);

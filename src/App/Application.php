@@ -12,6 +12,7 @@
 namespace Kovey\Web\App;
 
 use Kovey\Connection\Pool\PoolInterface;
+use Kovey\Connection\AppInterface;
 use Kovey\Web\App\Http\Request\RequestInterface;
 use Kovey\Web\App\Http\Response\ResponseInterface;
 use Kovey\Web\App\Http\Router\RouterInterface;
@@ -21,7 +22,6 @@ use Kovey\Web\App\Mvc\View\ViewInterface;
 use Kovey\Library\Process\ProcessAbstract;
 use Kovey\Library\Container\ContainerInterface;
 use Kovey\Web\Middleware\MiddlewareInterface;
-use Kovey\Library\Config\Manager;
 use Kovey\Web\App\Bootstrap\Autoload;
 use Kovey\Web\Server\Server;
 use Kovey\Library\Process\UserProcess;
@@ -29,7 +29,7 @@ use Kovey\Library\Logger\Logger;
 use Kovey\Library\Logger\Monitor;
 use Kovey\Library\Exception\KoveyException;
 
-class Application
+class Application implements AppInterface
 {
 	/**
 	 * @description 配置
@@ -485,7 +485,7 @@ class Application
 		}
 
 		$template = APPLICATION_PATH . '/' . $this->config['views'] . '/' . $router->getViewPath() . '.' . $this->config['template'];
-		$obj = $this->container->get($router->getClassName(), $req, $res, $template, $this->plugins);
+		$obj = $this->container->get($router->getClassName(), $req, $res, $this->plugins);
 		if (!$obj instanceof ControllerInterface) {
 			Logger::writeErrorLog(__LINE__, __FILE__, "class \"$controller\" is not extends Kovey\Web\App\Mvc\Controller\ControllerInterface.");
 			$res->status(404);
@@ -716,10 +716,12 @@ class Application
 	 * @param string $name
 	 *
 	 * @param PoolInterface $pool
+     *
+     * @param int $partition
 	 *
 	 * @return Application
 	 */
-	public function registerPool(string $name, PoolInterface $pool) : Application
+	public function registerPool(string $name, PoolInterface $pool, int $partition = 0) : AppInterface
 	{
 		$this->pools[$name] = $pool;
 		return $this;
@@ -729,10 +731,12 @@ class Application
 	 * @description 获取连接池
 	 *
 	 * @param string $name
+     *
+     * @param int $partition
 	 *
 	 * @return PoolInterface | null
 	 */
-	public function getPool(string $name) : ?PoolInterface
+	public function getPool(string $name, int $partition = 0) : ?PoolInterface
 	{
 		return $this->pools[$name] ?? null;
 	}
@@ -743,7 +747,7 @@ class Application
 	 *
 	 * @return ControllerInterface
 	 */
-	public function getContainer() : ControllerInterface
+	public function getContainer() : ContainerInterface
 	{
 		return $this->container;
 	}
