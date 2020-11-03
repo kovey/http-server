@@ -119,6 +119,7 @@ class ServerTest extends TestCase
             $this->assertEquals('', $data['ip']);
             $this->assertEquals(500, $data['http_code']);
             $this->assertEquals('<p style="text-align:center;">Kovey Frawework</p><p style="text-align:center">Internal Error!</p>', $data['response']);
+            $this->assertTrue(!empty($data['traceId']));
         });
 
         self::$server->request($this->req, $this->res);

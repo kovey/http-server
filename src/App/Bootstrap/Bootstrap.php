@@ -93,13 +93,13 @@ class Bootstrap
 			->on('view', function (ControllerInterface $con, $template) {
 				$con->setView(new Sample($con->getResponse(), $template));
 			})
-			->on('pipeline', function (RequestInterface $req, ResponseInterface $res, RouterInterface $router) use($app) {
+			->on('pipeline', function (RequestInterface $req, ResponseInterface $res, RouterInterface $router, string $traceId) use($app) {
 				return (new Pipeline($app->getContainer()))
 					->via('handle')
 					->send($req, $res)
 					->through(array_merge($app->getDefaultMiddlewares(), $router->getMiddlewares()))
-					->then(function (RequestInterface $req, ResponseInterface $res) use ($router, $app) {
-						return $app->runAction($req, $res, $router);
+					->then(function (RequestInterface $req, ResponseInterface $res) use ($router, $app, $traceId) {
+						return $app->runAction($req, $res, $router, $traceId);
 					});
 			});
 	}

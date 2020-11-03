@@ -320,8 +320,9 @@ class Server
         $time = time();
 
 		$result = array();
+        $traceId = $this->getTraceId($request->server['request_uri']);
 		try {
-			$result = call_user_func($this->events['workflow'], $request);
+			$result = call_user_func($this->events['workflow'], $request, $traceId);
 		} catch (\Throwable $e) {
 			if ($this->isRunDocker) {
 				Logger::writeExceptionLog(__LINE__, __FILE__, $e);
@@ -334,7 +335,7 @@ class Server
 					'content-type' => 'text/html'
 				),
 				'content' => ErrorTemplate::getContent(ErrorTemplate::HTTP_CODE_500),
-				'cookie' => array()
+                'cookie' => array()
 			);
 		}
 
@@ -346,6 +347,8 @@ class Server
 			$response->header($k, $v);
 		}
 
+        $response->header('Request-Id', $traceId);
+
 		$cookie = $result['cookie'] ?? array();
 		foreach ($cookie as $cookie) {
 			$response->header('Set-Cookie', $cookie);
@@ -353,7 +356,7 @@ class Server
 
         $body = $httpCode == ErrorTemplate::HTTP_CODE_200 ? $result['content'] : ErrorTemplate::getContent($httpCode);
         $response->end($body);
-        $this->monitor($begin, microtime(true), $request->server['request_uri'] ?? '/', $request->getContent(), $request->server['remote_addr'] ?? '', $time, $httpCode, $body);
+        $this->monitor($begin, microtime(true), $request->server['request_uri'] ?? '/', $request->getContent(), $request->server['remote_addr'] ?? '', $time, $httpCode, $body, $traceId);
     }
 
     /**
@@ -376,7 +379,7 @@ class Server
      * @param string $body
      *
      */
-    private function monitor(float $begin, float $end, string $uri, string $params, string $ip, int $time, int $code, string $body)
+    private function monitor(float $begin, float $end, string $uri, string $params, string $ip, int $time, int $code, string $body, string $traceId)
     {
         if (!isset($this->events['monitor'])) {
             return;
@@ -392,7 +395,8 @@ class Server
                 'timestamp' => date('Y-m-d H:i:s', $time),
                 'minute' => date('YmdHi', $time),
                 'http_code' => $code,
-                'response' => $body
+                'response' => $body,
+                'traceId' => $traceId
             ));
         } catch (\Throwable $e) {
             if ($this->isRunDocker) {
@@ -436,4 +440,16 @@ class Server
 	{
 		return $this->serv;
 	}
+
+    /**
+     * @description get trace id
+     *
+     * @param string $prefix
+     *
+     * @return string
+     */
+    public function getTraceId(string $prefix) : string
+    {
+        return hash('sha256', uniqid($prefix, true) . random_int(1000000, 9999999));
+    }
 }

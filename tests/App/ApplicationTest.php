@@ -158,13 +158,13 @@ class ApplicationTest extends TestCase
         Application::getInstance()->on('response', function () {
             return new Response();
         });
-        Application::getInstance()->on('pipeline', function ($req, $res, $router) {
+        Application::getInstance()->on('pipeline', function ($req, $res, $router, $traceId) {
             return (new Pipeline(Application::getInstance()->getContainer()))
                 ->via('handle')
                 ->send($req, $res)
                 ->through(array_merge(Application::getInstance()->getDefaultMiddlewares(), $router->getMiddlewares()))
-                ->then(function (RequestInterface $req, ResponseInterface $res) use ($router) {
-                    return Application::getInstance()->runAction($req, $res, $router);
+                ->then(function (RequestInterface $req, ResponseInterface $res) use ($router, $traceId) {
+                    return Application::getInstance()->runAction($req, $res, $router, $traceId);
                 });
         });
         Application::getInstance()->on('view', function ($con, $template) {
@@ -180,7 +180,7 @@ class ApplicationTest extends TestCase
                 'Content-Length' => 29
             ),
             'cookie' => array()
-        ), Application::getInstance()->workflow($this->req));
+        ), Application::getInstance()->workflow($this->req, hash('sha256', '123456')));
     }
 
     public function tearDown() : void

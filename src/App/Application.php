@@ -311,10 +311,12 @@ class Application implements AppInterface
 	 * @description 工作流
 	 *
 	 * @param Swoole\Http\Request $request
+     *
+     * @param string $traceId
 	 *
 	 * @return Array
 	 */
-	public function workflow(\Swoole\Http\Request $request) : Array
+	public function workflow(\Swoole\Http\Request $request, string $traceId) : Array
 	{
 		if (!isset($this->events['request'])
 			|| !isset($this->events['response'])
@@ -346,12 +348,12 @@ class Application implements AppInterface
 
 		$result = null;
 		if (isset($this->events['pipeline'])) {
-			$result = call_user_func($this->events['pipeline'], $req, $res, $router);
+			$result = call_user_func($this->events['pipeline'], $req, $res, $router, $traceId);
 			if ($result instanceof ResponseInterface) {
 				$result = $result->toArray();
 			}
 		} else {
-			$result = $this->runAction($req, $res, $router);
+			$result = $this->runAction($req, $res, $router, $traceId);
 		}
 
 		return $result;
@@ -465,10 +467,12 @@ class Application implements AppInterface
 	 * @param ResponseInterface $res
 	 *
 	 * @param RouterInterface $router
+     *
+     * @param string $traceId
 	 *
 	 * @return Array
 	 */
-	public function runAction(RequestInterface $req, ResponseInterface $res, RouterInterface $router) : Array
+	public function runAction(RequestInterface $req, ResponseInterface $res, RouterInterface $router, string $traceId) : Array
 	{
 		if (!empty($router->getCallable())) {
 			$res->setBody(call_user_func($router->getCallable(), $req, $res));
@@ -485,7 +489,7 @@ class Application implements AppInterface
 		}
 
 		$template = APPLICATION_PATH . '/' . $this->config['views'] . '/' . $router->getViewPath() . '.' . $this->config['template'];
-		$obj = $this->container->get($router->getClassName(), $req, $res, $this->plugins);
+		$obj = $this->container->get($router->getClassName(), $traceId, $req, $res, $this->plugins);
 		if (!$obj instanceof ControllerInterface) {
 			Logger::writeErrorLog(__LINE__, __FILE__, "class \"$controller\" is not extends Kovey\Web\App\Mvc\Controller\ControllerInterface.");
 			$res->status(404);
@@ -513,9 +517,9 @@ class Application implements AppInterface
 		$content = '';
 
 		if (isset($this->events['run_action'])) {
-			$content = call_user_func($this->events['run_action'], $obj, $action, ...$this->container->getMethodArguments($router->getClassName(), $action));
+			$content = call_user_func($this->events['run_action'], $obj, $action, ...$this->container->getMethodArguments($router->getClassName(), $action, $traceId));
 		} else {
-			$content = $obj->$action(...$this->container->getMethodArguments($router->getClassName(), $action));
+			$content = $obj->$action(...$this->container->getMethodArguments($router->getClassName(), $action, $traceId));
 		}
 
 		if ($obj->isViewDisabled()) {
