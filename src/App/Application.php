@@ -727,7 +727,11 @@ class Application implements AppInterface
 	 */
 	public function registerPool(string $name, PoolInterface $pool, int $partition = 0) : AppInterface
 	{
-		$this->pools[$name] = $pool;
+        if (isset($this->pools[$name])) {
+            $this->pools[$name] = array();
+        }
+
+		$this->pools[$name][$partition] = $pool;
 		return $this;
 	}
 
@@ -742,7 +746,7 @@ class Application implements AppInterface
 	 */
 	public function getPool(string $name, int $partition = 0) : ?PoolInterface
 	{
-		return $this->pools[$name] ?? null;
+		return $this->pools[$name][$partition] ?? null;
 	}
 
 	/**
