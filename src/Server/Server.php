@@ -12,7 +12,7 @@
 namespace Kovey\Web\Server;
 
 use Swoole\Http\Response;
-use Kovey\Library\Logger\Logger;
+use Kovey\Logger\Logger;
 
 class Server
 {
@@ -325,7 +325,7 @@ class Server
 			$result = call_user_func($this->events['workflow'], $request, $traceId);
 		} catch (\Throwable $e) {
 			if ($this->isRunDocker) {
-				Logger::writeExceptionLog(__LINE__, __FILE__, $e);
+				Logger::writeExceptionLog(__LINE__, __FILE__, $e, $traceId);
 			} else {
 				echo $e->getMessage() . PHP_EOL . $e->getTraceAsString();
 			}

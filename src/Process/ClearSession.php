@@ -11,7 +11,7 @@
  */
 namespace Kovey\Web\Process;
 
-use Kovey\Library\Logger\Logger;
+use Kovey\Logger\Logger;
 use Kovey\Library\Config\Manager;
 use Kovey\Library\Process\ProcessAbstract;
 use Swoole\Timer;

@@ -25,8 +25,8 @@ use Kovey\Web\Middleware\MiddlewareInterface;
 use Kovey\Web\App\Bootstrap\Autoload;
 use Kovey\Web\Server\Server;
 use Kovey\Library\Process\UserProcess;
-use Kovey\Library\Logger\Logger;
-use Kovey\Library\Logger\Monitor;
+use Kovey\Logger\Logger;
+use Kovey\Logger\Monitor;
 use Kovey\Library\Exception\KoveyException;
 
 class Application implements AppInterface
@@ -321,24 +321,24 @@ class Application implements AppInterface
 		if (!isset($this->events['request'])
 			|| !isset($this->events['response'])
 		) {
-			Logger::writeErrorLog(__LINE__, __FILE__, 'request or response events is not exits.');
+			Logger::writeErrorLog(__LINE__, __FILE__, 'request or response events is not exits.', $traceId);
 			return array();
 		}
 
 		$req = call_user_func($this->events['request'], $request);
 		if (!$req instanceof RequestInterface) {
-			Logger::writeErrorLog(__LINE__, __FILE__, 'request is not implements Kovey\Web\App\Http\Request\RequestInterface.');
+			Logger::writeErrorLog(__LINE__, __FILE__, 'request is not implements Kovey\Web\App\Http\Request\RequestInterface.', $traceId);
 			return array();
 		}
 		$res = call_user_func($this->events['response']);
 		if (!$res instanceof ResponseInterface) {
-			Logger::writeErrorLog(__LINE__, __FILE__, 'request is not implements Kovey\Web\App\Http\Responset\ResponseInterface.');
+			Logger::writeErrorLog(__LINE__, __FILE__, 'request is not implements Kovey\Web\App\Http\Responset\ResponseInterface.', $traceId);
 			return array();
 		}
 		$uri = trim($req->getUri());
 		$router = $this->routers->getRouter($uri, $req->getMethod());
 		if ($router === null) {
-			Logger::writeErrorLog(__LINE__, __FILE__, 'router is error, uri: ' . $uri);
+			Logger::writeErrorLog(__LINE__, __FILE__, 'router is error, uri: ' . $uri, $traceId);
 			$res->status('405');
 			return $res->toArray();
 		}
@@ -483,7 +483,7 @@ class Application implements AppInterface
 		$conFile = APPLICATION_PATH . '/' . $this->config['controllers'] . $router->getClassPath();
 
 		if (!is_file($conFile)) {
-			Logger::writeErrorLog(__LINE__, __FILE__, "file of " . $router->getController() . " is not exists, controller file \" $conFile\".");
+			Logger::writeErrorLog(__LINE__, __FILE__, "file of " . $router->getController() . " is not exists, controller file \" $conFile\".", $traceId);
 			$res->status(404);
 			return $res->toArray();
 		}
@@ -491,14 +491,14 @@ class Application implements AppInterface
 		$template = APPLICATION_PATH . '/' . $this->config['views'] . '/' . $router->getViewPath() . '.' . $this->config['template'];
 		$obj = $this->container->get($router->getClassName(), $traceId, $req, $res, $this->plugins);
 		if (!$obj instanceof ControllerInterface) {
-			Logger::writeErrorLog(__LINE__, __FILE__, "class \"$controller\" is not extends Kovey\Web\App\Mvc\Controller\ControllerInterface.");
+			Logger::writeErrorLog(__LINE__, __FILE__, "class \"$controller\" is not extends Kovey\Web\App\Mvc\Controller\ControllerInterface.", $traceId);
 			$res->status(404);
 			return $res->toArray();
 		}
 
 		$action = $router->getActionName();
 		if (!method_exists($obj, $action)) {
-			Logger::writeErrorLog(__LINE__, __FILE__, "action \"$action\" is not exists.");
+			Logger::writeErrorLog(__LINE__, __FILE__, "action \"$action\" is not exists.", $traceId);
 			$res->status(404);
 			return $res->toArray();
 		}
@@ -536,7 +536,7 @@ class Application implements AppInterface
 		}
 
 		if (!is_file($template)) {
-			Logger::writeErrorLog(__LINE__, __FILE__, "template \"$template\" is not exists.");
+			Logger::writeErrorLog(__LINE__, __FILE__, "template \"$template\" is not exists.", $traceId);
 			$res->status(404);
 			$res->setBody('');
 			return $res->toArray();

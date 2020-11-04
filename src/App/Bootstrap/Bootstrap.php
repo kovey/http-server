@@ -30,9 +30,9 @@ use Kovey\Web\App\Http\Router\RouterInterface;
 use Kovey\Web\App\Mvc\View\Sample;
 use Kovey\Web\App\Mvc\Controller\ControllerInterface;
 use Kovey\Web\App\Http\Pipeline\Pipeline;
-use Kovey\Library\Logger\Logger;
-use Kovey\Library\Logger\Db;
-use Kovey\Library\Logger\Monitor;
+use Kovey\Logger\Logger;
+use Kovey\Logger\Db;
+use Kovey\Logger\Monitor;
 
 class Bootstrap
 {
@@ -47,6 +47,7 @@ class Bootstrap
 	{
 		ko_change_process_name(Manager::get('server.server.name') . ' root');
 		Logger::setLogPath(Manager::get('server.logger.info'), Manager::get('server.logger.exception'), Manager::get('server.logger.error'), Manager::get('server.logger.warning'));
+        Logger::setCategory(Manager::get('server.server.name'));
 		Monitor::setLogDir(Manager::get('server.logger.monitor'));
 		Db::setLogDir(Manager::get('server.logger.db'));
 
