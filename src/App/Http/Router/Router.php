@@ -94,7 +94,7 @@ class Router implements RouterInterface
 	 *
 	 * @return Router
 	 */
-	public function __construct(string $uri, callable | array $fun = null)
+	public function __construct(string $uri, array | callable | string $fun = '')
 	{
 		$this->uri = str_replace('//', '/', $uri);
 		$this->middlewares = array();
