@@ -168,10 +168,12 @@ class Request implements RequestInterface
 		$cType = explode(';', $this->req->header['content-type'] ?? '')[0];
 		$method = $this->getMethod();
 		if ($cType === 'application/json') {
-			$data = Json::decode($this->req->getContent());
-			if (empty($data)) {
+            $origin = $this->req->getContent();
+            if (!empty($origin)) {
+                $data = Json::decode(htmlspecialchars($origin));
+            } else {
 				$data = array();
-			}
+            }
 			if ($method === 'get') {
 				$this->get = $data;
 				return;
@@ -608,21 +610,33 @@ class Request implements RequestInterface
 		switch (strtolower($this->getMethod())) {
 			case 'get':
                 array_walk($this->get, function (&$row) {
+                    if (is_array($row)) {
+                        return;
+                    }
                     $row = htmlspecialchars($row);
                 });
 				break;
 			case 'post':
                 array_walk($this->post, function (&$row) {
+                    if (is_array($row)) {
+                        return;
+                    }
                     $row = htmlspecialchars($row);
                 });
 				break;
 			case 'put':
                 array_walk($this->put, function (&$row) {
+                    if (is_array($row)) {
+                        return;
+                    }
                     $row = htmlspecialchars($row);
                 });
 				break;
 			case 'delete':
                 array_walk($this->delete, function (&$row) {
+                    if (is_array($row)) {
+                        return;
+                    }
                     $row = htmlspecialchars($row);
                 });
 				break;
