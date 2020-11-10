@@ -659,6 +659,16 @@ class Application implements AppInterface
 	{
 		try {
 			foreach ($this->pools as $pool) {
+                if (is_array($pool)) {
+                    foreach ($pool as $pl) {
+                        $pl->init();
+                        if (count($pl->getErrors()) > 0) {
+                            Logger::writeErrorLog(__LINE__, __FILE__, implode(';', $pl->getErrors()));
+                        }
+                    }
+                    continue;
+                }
+
 				$pool->init();
 				if (count($pool->getErrors()) > 0) {
 					Logger::writeErrorLog(__LINE__, __FILE__, implode(';', $pool->getErrors()));
@@ -727,10 +737,7 @@ class Application implements AppInterface
 	 */
 	public function registerPool(string $name, PoolInterface $pool, int $partition = 0) : AppInterface
 	{
-        if (isset($this->pools[$name])) {
-            $this->pools[$name] = array();
-        }
-
+        $this->pools[$name] ??= array();
 		$this->pools[$name][$partition] = $pool;
 		return $this;
 	}
