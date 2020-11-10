@@ -170,7 +170,7 @@ class Request implements RequestInterface
 		if ($cType === 'application/json') {
             $origin = $this->req->getContent();
             if (!empty($origin)) {
-                $data = Json::decode(htmlspecialchars($origin));
+                $data = Json::decode($origin);
             } else {
 				$data = array();
             }
