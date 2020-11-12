@@ -25,7 +25,7 @@ class ClearSession extends ProcessAbstract
 	 */
     protected function init()
     {
-        $this->processName = Manager::get('app.process.name') . ' core clear session';
+        $this->processName = Manager::get('server.server.name') . ' core clear session';
     }
 
 	/**
