@@ -356,7 +356,28 @@ class Server
 
         $body = $httpCode == ErrorTemplate::HTTP_CODE_200 ? $result['content'] : ErrorTemplate::getContent($httpCode);
         $response->end($body);
-        $this->monitor($begin, microtime(true), $request->server['request_uri'] ?? '/', $request->getContent(), $request->server['remote_addr'] ?? '', $time, $httpCode, $body, $traceId);
+        $this->monitor($begin, microtime(true), $request->server['request_uri'] ?? '/', $this->getData($request), $request->server['remote_addr'] ?? '', $time, $httpCode, $body, $traceId);
+    }
+
+    /**
+     * @description get origin data
+     *
+     * @param \Swoole\Http\Request $request
+     *
+     * @return string
+     */
+    private function getData(\Swoole\Http\Request $request) : string
+    {
+        $params = $request->getContent();
+        if (!empty($params)) {
+            return $params;
+        }
+
+        if (!empty($request->get)) {
+            return Json::encode($request->get);
+        }
+
+        return Json::encode($request->post);
     }
 
     /**
