@@ -28,6 +28,7 @@ use Kovey\Library\Process\UserProcess;
 use Kovey\Logger\Logger;
 use Kovey\Logger\Monitor;
 use Kovey\Library\Exception\KoveyException;
+use Kovey\Web\Server\ErrorTemplate;
 
 class Application implements AppInterface
 {
@@ -254,21 +255,23 @@ class Application implements AppInterface
 	 * @param string $method
 	 *
 	 * @param Array $args
+     *
+     * @param string $traceId
 	 *
 	 * @return null
 	 */
-	public function console(string $path, string $method, Array $args) : void
+	public function console(string $path, string $method, Array $args, string $traceId) : void
 	{
 		if (!isset($this->events['console'])) {
 			return;
 		}
 
 		try {
-			call_user_func($this->events['console'], $path, $method, $args);
+			call_user_func($this->events['console'], $path, $method, $args, $traceId);
 		} catch (\Exception $e) {
-			Logger::writeExceptionLog(__LINE__, __FILE__, $e);
+			Logger::writeExceptionLog(__LINE__, __FILE__, $e, $traceId);
 		} catch (\Throwable $e) {
-			Logger::writeExceptionLog(__LINE__, __FILE__, $e);
+			Logger::writeExceptionLog(__LINE__, __FILE__, $e, $traceId);
 		}
 	}
 
@@ -346,16 +349,30 @@ class Application implements AppInterface
 		$req->setController($router->getController())
 			->setAction($router->getAction());
 
-		$result = null;
-		if (isset($this->events['pipeline'])) {
-			$result = call_user_func($this->events['pipeline'], $req, $res, $router, $traceId);
-			if ($result instanceof ResponseInterface) {
-				$result = $result->toArray();
-			}
-		} else {
-			$result = $this->runAction($req, $res, $router, $traceId);
-		}
+        $result = null;
+        try {
+            if (isset($this->events['pipeline'])) {
+                $result = call_user_func($this->events['pipeline'], $req, $res, $router, $traceId);
+                if ($result instanceof ResponseInterface) {
+                    $result = $result->toArray();
+                }
+            } else {
+                $result = $this->runAction($req, $res, $router, $traceId);
+            }
+        } catch (\Throwable $e) {
+            Logger::writeErrorLog(__LINE__, __FILE__, $e, $traceId);
+            $result = array(
+				'httpCode' => ErrorTemplate::HTTP_CODE_500,
+				'header' => array(
+					'content-type' => 'text/html'
+				),
+				'content' => ErrorTemplate::getContent(ErrorTemplate::HTTP_CODE_500),
+                'cookie' => array()
+            );
+        }
 
+        $result['class'] = $router->getController() . 'Controller';
+        $result['method'] = $router->getAction() . 'Action';
 		return $result;
 	}
 

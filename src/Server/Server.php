@@ -234,14 +234,10 @@ class Server
 			}
 
 			go(function () use ($data, $workerId) {
-				call_user_func($this->events['console'], $data['p'] ?? '', $data['m'] ?? '', $data['a'] ?? array());
+				call_user_func($this->events['console'], $data['p'] ?? '', $data['m'] ?? '', $data['a'] ?? array(), $data['t'] ?? '');
 			});
         } catch (\Throwable $e) {
-			if ($this->isRunDocker) {
-				Logger::writeExceptionLog(__LINE__, __FILE__, $e);
-			} else {
-				echo $e->getMessage() . PHP_EOL . $e->getTraceAsString();
-			}
+            Logger::writeExceptionLog(__LINE__, __FILE__, $e, $data['t'] ?? '');
         }
     }
 
@@ -324,11 +320,7 @@ class Server
 		try {
 			$result = call_user_func($this->events['workflow'], $request, $traceId);
 		} catch (\Throwable $e) {
-			if ($this->isRunDocker) {
-				Logger::writeExceptionLog(__LINE__, __FILE__, $e, $traceId);
-			} else {
-				echo $e->getMessage() . PHP_EOL . $e->getTraceAsString();
-			}
+            Logger::writeExceptionLog(__LINE__, __FILE__, $e, $traceId);
 			$result = array(
 				'httpCode' => ErrorTemplate::HTTP_CODE_500,
 				'header' => array(
@@ -354,9 +346,12 @@ class Server
 			$response->header('Set-Cookie', $cookie);
 		}
 
-        $body = $httpCode == ErrorTemplate::HTTP_CODE_200 ? $result['content'] : ErrorTemplate::getContent($httpCode);
+        $body = $result['content'] ?? ErrorTemplate::getContent($httpCode);
         $response->end($body);
-        $this->monitor($begin, microtime(true), $request->server['request_uri'] ?? '/', $this->getData($request), $request->server['remote_addr'] ?? '', $time, $httpCode, $body, $traceId);
+        $this->monitor(
+            $begin, microtime(true), $request->server['request_uri'] ?? '/', $this->getData($request), $request->server['remote_addr'] ?? '', $time, 
+            $httpCode, $body, $traceId, $result['class'] ?? '', $result['method'] ?? ''
+        );
     }
 
     /**
@@ -400,7 +395,7 @@ class Server
      * @param string $body
      *
      */
-    private function monitor(float $begin, float $end, string $uri, string $params, string $ip, int $time, int $code, string $body, string $traceId)
+    private function monitor(float $begin, float $end, string $uri, string $params, string $ip, int $time, int $code, string $body, string $traceId, string $class, string $method)
     {
         if (!isset($this->events['monitor'])) {
             return;
@@ -411,6 +406,9 @@ class Server
                 'delay' => round(($end - $begin) * 1000, 2),
                 'path' => $uri,
                 'params' => $params,
+                'request_time' => $begin * 10000,
+                'class' => $class,
+                'method' => $method,
                 'ip' => $ip,
                 'time' => $time,
                 'timestamp' => date('Y-m-d H:i:s', $time),
@@ -420,11 +418,7 @@ class Server
                 'traceId' => $traceId
             ));
         } catch (\Throwable $e) {
-            if ($this->isRunDocker) {
-                Logger::writeExceptionLog(__LINE__, __FILE__, $e);
-            } else {
-                echo $e->getMessage() . PHP_EOL . $e->getTraceAsString();
-            }
+            Logger::writeExceptionLog(__LINE__, __FILE__, $e);
         }
     }
 
