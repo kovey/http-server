@@ -505,8 +505,9 @@ class Application implements AppInterface
 			return $res->toArray();
 		}
 
+        $objectExt = $this->container->getKeywords($router->getClassName(), $router->getAction());
 		$template = APPLICATION_PATH . '/' . $this->config['views'] . '/' . $router->getViewPath() . '.' . $this->config['template'];
-		$obj = $this->container->get($router->getClassName(), $traceId, $req, $res, $this->plugins);
+		$obj = $this->container->get($router->getClassName(), $traceId, $objectExt['ext'], $req, $res, $this->plugins);
 		if (!$obj instanceof ControllerInterface) {
 			Logger::writeErrorLog(__LINE__, __FILE__, "class \"$controller\" is not extends Kovey\Web\App\Mvc\Controller\ControllerInterface.", $traceId);
 			$res->status(404);
@@ -533,11 +534,21 @@ class Application implements AppInterface
 
 		$content = '';
 
-		if (isset($this->events['run_action'])) {
-			$content = call_user_func($this->events['run_action'], $obj, $action, ...$this->container->getMethodArguments($router->getClassName(), $action, $traceId));
-		} else {
-			$content = $obj->$action(...$this->container->getMethodArguments($router->getClassName(), $action, $traceId));
-		}
+        if ($objectExt['openTransation']) {
+            $objectExt['database']->transaction(function ($db, $finally, $obj, $action, $router, $traceId) {
+                if (isset($this->events['run_action'])) {
+                    $content = call_user_func($this->events['run_action'], $obj, $action, ...$this->container->getMethodArguments($router->getClassName(), $action, $traceId));
+                } else {
+                    $content = $obj->$action(...$this->container->getMethodArguments($router->getClassName(), $action, $traceId));
+                }
+            }, null, $obj, $action, $router, $traceId);
+        } else {
+            if (isset($this->events['run_action'])) {
+                $content = call_user_func($this->events['run_action'], $obj, $action, ...$this->container->getMethodArguments($router->getClassName(), $action, $traceId));
+            } else {
+                $content = $obj->$action(...$this->container->getMethodArguments($router->getClassName(), $action, $traceId));
+            }
+        }
 
 		if ($obj->isViewDisabled()) {
 			$res->setBody($content);
