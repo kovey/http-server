@@ -535,16 +535,16 @@ class Application implements AppInterface
 		$content = '';
 
         if (isset($objectExt['openTransaction']) && $objectExt['openTransaction']) {
-            $objectExt['database']->beginTransaction();
+            $objectExt['database']->getConnection()->beginTransaction();
             try {
                 if (isset($this->events['run_action'])) {
                     $content = call_user_func($this->events['run_action'], $obj, $action, ...$this->container->getMethodArguments($router->getClassName(), $action, $traceId));
                 } else {
                     $content = $obj->$action(...$this->container->getMethodArguments($router->getClassName(), $action, $traceId));
                 }
-                $objectExt['database']->commit();
+                $objectExt['database']->getConnection()->commit();
             } catch (\Throwable $e) {
-                $objectExt['database']->rollBack();
+                $objectExt['database']->getConnection()->rollBack();
                 throw $e;
             }
         } else {
