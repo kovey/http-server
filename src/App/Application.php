@@ -534,14 +534,19 @@ class Application implements AppInterface
 
 		$content = '';
 
-        if ($objectExt['openTransation']) {
-            $objectExt['database']->transaction(function ($db, $finally, $obj, $action, $router, $traceId) {
+        if (isset($objectExt['openTransaction']) && $objectExt['openTransaction']) {
+            $objectExt['database']->beginTransaction();
+            try {
                 if (isset($this->events['run_action'])) {
                     $content = call_user_func($this->events['run_action'], $obj, $action, ...$this->container->getMethodArguments($router->getClassName(), $action, $traceId));
                 } else {
                     $content = $obj->$action(...$this->container->getMethodArguments($router->getClassName(), $action, $traceId));
                 }
-            }, null, $obj, $action, $router, $traceId);
+                $objectExt['database']->commit();
+            } catch (\Throwable $e) {
+                $objectExt['database']->rollBack();
+                throw $e;
+            }
         } else {
             if (isset($this->events['run_action'])) {
                 $content = call_user_func($this->events['run_action'], $obj, $action, ...$this->container->getMethodArguments($router->getClassName(), $action, $traceId));
@@ -549,6 +554,7 @@ class Application implements AppInterface
                 $content = $obj->$action(...$this->container->getMethodArguments($router->getClassName(), $action, $traceId));
             }
         }
+
 
 		if ($obj->isViewDisabled()) {
 			$res->setBody($content);
