@@ -505,7 +505,7 @@ class Application implements AppInterface
 			return $res->toArray();
 		}
 
-        $objectExt = $this->container->getKeywords($router->getClassName(), $router->getAction());
+        $objectExt = $this->container->getKeywords($router->getClassName(), $router->getActionName());
 		$template = APPLICATION_PATH . '/' . $this->config['views'] . '/' . $router->getViewPath() . '.' . $this->config['template'];
 		$obj = $this->container->get($router->getClassName(), $traceId, $objectExt['ext'], $req, $res, $this->plugins);
 		if (!$obj instanceof ControllerInterface) {

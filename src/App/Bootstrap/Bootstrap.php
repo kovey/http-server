@@ -22,7 +22,7 @@ use Kovey\Web\App\Http\Request\RequestInterface;
 use Kovey\Web\App\Http\Response\Response;
 use Kovey\Web\App\Http\Response\ResponseInterface;
 use Kovey\Library\Container\Container;
-use Kovey\Library\Middleware\SessionStart;
+use Kovey\Web\Middleware\SessionStart;
 use Kovey\Web\App\Http\Router\Routers;
 use Kovey\Web\App\Http\Router\Router;
 use Kovey\Web\App\Http\Router\Route;

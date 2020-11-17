@@ -79,16 +79,12 @@ class File implements SessionInterface
 		}
 
 		$file = System::readFile($this->file);
-		if ($file === false) {
+		if (empty($file)) {
+            $this->content = array();
 			return;
 		}
 
-		$info = Json::decode($file);
-		if (empty($info) || !is_array($info)) {
-			return;
-		}
-
-		$this->content = $info;
+		$this->content = Json::decode($file);
 	}
 
 	/**

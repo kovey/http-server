@@ -552,7 +552,7 @@ class Request implements RequestInterface
 	 */
 	public function getCookie() : Array
 	{
-		return $this->req->cookie;
+		return empty($this->req->cookie) ? array() : $this->req->cookie;
 	}
 
 	/**

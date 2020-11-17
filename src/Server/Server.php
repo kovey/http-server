@@ -13,6 +13,7 @@ namespace Kovey\Web\Server;
 
 use Swoole\Http\Response;
 use Kovey\Logger\Logger;
+use Kovey\Library\Util\Json;
 
 class Server
 {
@@ -372,7 +373,7 @@ class Server
             return Json::encode($request->get);
         }
 
-        return Json::encode($request->post);
+        return Json::encode(empty($request->post) ? array() : $request->post);
     }
 
     /**
