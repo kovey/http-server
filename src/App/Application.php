@@ -534,7 +534,7 @@ class Application implements AppInterface
 
 		$content = '';
 
-        if (isset($objectExt['openTransaction']) && $objectExt['openTransaction']) {
+        if ($objectExt['openTransaction']) {
             $objectExt['database']->getConnection()->beginTransaction();
             try {
                 if (isset($this->events['run_action'])) {
