@@ -351,7 +351,7 @@ class Server
         $response->end($body);
         $this->monitor(
             $begin, microtime(true), $request->server['request_uri'] ?? '/', $this->getData($request), $request->server['remote_addr'] ?? '', $time, 
-            $httpCode, $body, $traceId, $result['class'] ?? '', $result['method'] ?? ''
+            $httpCode, $body, $traceId, $result['class'] ?? '', $result['method'] ?? '', $request->server['request_method']
         );
     }
 
@@ -396,7 +396,7 @@ class Server
      * @param string $body
      *
      */
-    private function monitor(float $begin, float $end, string $uri, string $params, string $ip, int $time, int $code, string $body, string $traceId, string $class, string $method)
+    private function monitor(float $begin, float $end, string $uri, string $params, string $ip, int $time, int $code, string $body, string $traceId, string $class, string $method, string $reqMethod)
     {
         if (!isset($this->events['monitor'])) {
             return;
@@ -406,6 +406,7 @@ class Server
             call_user_func($this->events['monitor'], array(
                 'delay' => round(($end - $begin) * 1000, 2),
                 'path' => $uri,
+                'request_method' => $reqMethod,
                 'params' => $params,
                 'request_time' => $begin * 10000,
                 'class' => $class,
