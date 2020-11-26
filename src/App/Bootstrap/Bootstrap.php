@@ -46,7 +46,10 @@ class Bootstrap
     public function __initLogger(Application $app)
     {
         ko_change_process_name(Manager::get('server.server.name') . ' root');
-        Logger::setLogPath(Manager::get('server.logger.info'), Manager::get('server.logger.exception'), Manager::get('server.logger.error'), Manager::get('server.logger.warning'));
+        Logger::setLogPath(
+            Manager::get('server.logger.info'), Manager::get('server.logger.exception'), Manager::get('server.logger.error'), 
+            Manager::get('server.logger.warning'), Manager::get('server.logger.busi_exception')
+        );
         Logger::setCategory(Manager::get('server.server.name'));
         Monitor::setLogDir(Manager::get('server.logger.monitor'));
         Db::setLogDir(Manager::get('server.logger.db'));
