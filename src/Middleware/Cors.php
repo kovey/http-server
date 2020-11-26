@@ -16,20 +16,20 @@ use Kovey\Web\App\Http\Response\ResponseInterface;
 
 class Cors implements MiddlewareInterface
 {
-	/**
-	 * @description handle
-	 *
-	 * @param RequestInterface $req
-	 *
-	 * @param ResponseInterface $res
-	 *
-	 * @param callable $next
+    /**
+     * @description handle
+     *
+     * @param RequestInterface $req
+     *
+     * @param ResponseInterface $res
+     *
+     * @param callable $next
      *
      * @return mixed
-	 */
-	public function handle(RequestInterface $req, ResponseInterface $res, callable $next)
-	{
+     */
+    public function handle(RequestInterface $req, ResponseInterface $res, callable $next)
+    {
         $req->processCors();
-		return $next($req, $res);
-	}
+        return $next($req, $res);
+    }
 }

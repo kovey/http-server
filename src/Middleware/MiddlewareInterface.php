@@ -16,16 +16,16 @@ use Kovey\Web\App\Http\Response\ResponseInterface;
 
 interface MiddlewareInterface
 {
-	/**
-	 * @description 中间件实现方法
-	 *
-	 * @param RequestInterface $req
-	 *
-	 * @param ResponseInterface $res
-	 *
-	 * @param callable $next
+    /**
+     * @description 中间件实现方法
+     *
+     * @param RequestInterface $req
+     *
+     * @param ResponseInterface $res
+     *
+     * @param callable $next
      *
      * @return mixed
-	 */
-	public function handle(RequestInterface $req, ResponseInterface $res, callable $next);
+     */
+    public function handle(RequestInterface $req, ResponseInterface $res, callable $next);
 }

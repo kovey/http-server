@@ -15,14 +15,14 @@ use Kovey\Web\App\Http\Response\ResponseInterface;
 
 interface PluginInterface
 {
-	/**
-	 * @description 事件循环节将关闭
-	 *
-	 * @param RequestInterface $request
-	 *
-	 * @param ResponseInterface $response
-	 *
-	 * @return mixed
-	 */
-	public function loopShutdown(RequestInterface $request, ResponseInterface $response);
+    /**
+     * @description 事件循环节将关闭
+     *
+     * @param RequestInterface $request
+     *
+     * @param ResponseInterface $response
+     *
+     * @return mixed
+     */
+    public function loopShutdown(RequestInterface $request, ResponseInterface $response);
 }

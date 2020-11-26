@@ -18,25 +18,25 @@ use Kovey\Library\Config\Manager;
 
 class SessionStart implements MiddlewareInterface
 {
-	/**
-	 * @description 中间件的具体实现
-	 *
-	 * @param RequestInterface $req
-	 *
-	 * @param ResponseInterface $res
-	 *
-	 * @param callable $next
+    /**
+     * @description 中间件的具体实现
+     *
+     * @param RequestInterface $req
+     *
+     * @param ResponseInterface $res
+     *
+     * @param callable $next
      *
      * @return mixed
-	 */
-	public function handle(RequestInterface $req, ResponseInterface $res, callable $next)
-	{
-		$cookie = $req->getCookie();
-		$sessionId = $cookie['kovey_session_id'] ?? '';
-		$session = new File(Manager::get('server.session.dir'), $sessionId);
-		$res->setCookie('kovey_session_id', $session->getSessionId(), strtotime('+1 Hour'));
-		$req->setSession($session);
+     */
+    public function handle(RequestInterface $req, ResponseInterface $res, callable $next)
+    {
+        $cookie = $req->getCookie();
+        $sessionId = $cookie['kovey_session_id'] ?? '';
+        $session = new File(Manager::get('server.session.dir'), $sessionId);
+        $res->setCookie('kovey_session_id', $session->getSessionId(), strtotime('+1 Hour'));
+        $req->setSession($session);
 
-		return $next($req, $res);
-	}
+        return $next($req, $res);
+    }
 }

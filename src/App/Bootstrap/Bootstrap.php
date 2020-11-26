@@ -36,133 +36,133 @@ use Kovey\Logger\Monitor;
 
 class Bootstrap
 {
-	/**
-	 * @description 初始化日志目录
-	 *
-	 * @param Application $app
-	 *
-	 * @return null
-	 */
-	public function __initLogger(Application $app)
-	{
-		ko_change_process_name(Manager::get('server.server.name') . ' root');
-		Logger::setLogPath(Manager::get('server.logger.info'), Manager::get('server.logger.exception'), Manager::get('server.logger.error'), Manager::get('server.logger.warning'));
+    /**
+     * @description 初始化日志目录
+     *
+     * @param Application $app
+     *
+     * @return null
+     */
+    public function __initLogger(Application $app)
+    {
+        ko_change_process_name(Manager::get('server.server.name') . ' root');
+        Logger::setLogPath(Manager::get('server.logger.info'), Manager::get('server.logger.exception'), Manager::get('server.logger.error'), Manager::get('server.logger.warning'));
         Logger::setCategory(Manager::get('server.server.name'));
-		Monitor::setLogDir(Manager::get('server.logger.monitor'));
-		Db::setLogDir(Manager::get('server.logger.db'));
+        Monitor::setLogDir(Manager::get('server.logger.monitor'));
+        Db::setLogDir(Manager::get('server.logger.db'));
 
-		if (Manager::get('server.session.open') === 'On' && Manager::get('server.session.type') === 'file') {
-			if (!is_dir(Manager::get('server.session.dir'))) {
-				mkdir(Manager::get('server.session.dir'), 0777, true);
-			}
-		}
-	}
-
-	/**
-	 * @description 初始化APP
-	 *
-	 * @param Application $app
-	 *
-	 * @return null
-	 */
-	public function __initApp(Application $app)
-	{
-		$app->registerServer(new Server(Manager::get('server.server')))
-			->registerContainer(new Container())
-			->registerRouters(new Routers())
-			->registerUserProcess(new UserProcess(Manager::get('server.server.worker_num')));
-        if (Manager::get('server.session.open') === 'On') {
-			$app->registerMiddleware(new SessionStart());
+        if (Manager::get('server.session.open') === 'On' && Manager::get('server.session.type') === 'file') {
+            if (!is_dir(Manager::get('server.session.dir'))) {
+                mkdir(Manager::get('server.session.dir'), 0777, true);
+            }
         }
-	}
+    }
 
-	/**
-	 * @description 初始化事件
-	 *
-	 * @param Application $app
-	 *
-	 * @return null
-	 */
-	public function __initEvents(Application $app)
-	{
-		$app->on('request', function ($request) {
-				return new Request($request);
-			})
-			->on('response', function () {
-				return new Response();
-			})
-			->on('view', function (ControllerInterface $con, $template) {
-				$con->setView(new Sample($con->getResponse(), $template));
-			})
-			->on('pipeline', function (RequestInterface $req, ResponseInterface $res, RouterInterface $router, string $traceId) use($app) {
-				return (new Pipeline($app->getContainer()))
-					->via('handle')
-					->send($req, $res)
-					->through(array_merge($app->getDefaultMiddlewares(), $router->getMiddlewares()))
-					->then(function (RequestInterface $req, ResponseInterface $res) use ($router, $app, $traceId) {
-						return $app->runAction($req, $res, $router, $traceId);
-					});
-			});
-	}
+    /**
+     * @description 初始化APP
+     *
+     * @param Application $app
+     *
+     * @return null
+     */
+    public function __initApp(Application $app)
+    {
+        $app->registerServer(new Server(Manager::get('server.server')))
+            ->registerContainer(new Container())
+            ->registerRouters(new Routers())
+            ->registerUserProcess(new UserProcess(Manager::get('server.server.worker_num')));
+        if (Manager::get('server.session.open') === 'On') {
+            $app->registerMiddleware(new SessionStart());
+        }
+    }
 
-	/**
-	 * @description 初始化进程
-	 *
-	 * @param Application $app
-	 *
-	 * @return null
-	 */
-	public function __initProcess(Application $app)
-	{
-		$app->registerProcess('kovey_config', (new Process\Config())->setProcessName(Manager::get('server.server.name') . ' config'));
-		if (Manager::get('server.session.open') === 'On' && Manager::get('server.session.type') === 'file') {
-			$app->registerProcess('kovey_session', new ClearSession());
-		}
-	}
+    /**
+     * @description 初始化事件
+     *
+     * @param Application $app
+     *
+     * @return null
+     */
+    public function __initEvents(Application $app)
+    {
+        $app->on('request', function ($request) {
+                return new Request($request);
+            })
+            ->on('response', function () {
+                return new Response();
+            })
+            ->on('view', function (ControllerInterface $con, $template) {
+                $con->setView(new Sample($con->getResponse(), $template));
+            })
+            ->on('pipeline', function (RequestInterface $req, ResponseInterface $res, RouterInterface $router, string $traceId) use($app) {
+                return (new Pipeline($app->getContainer()))
+                    ->via('handle')
+                    ->send($req, $res)
+                    ->through(array_merge($app->getDefaultMiddlewares(), $router->getMiddlewares()))
+                    ->then(function (RequestInterface $req, ResponseInterface $res) use ($router, $app, $traceId) {
+                        return $app->runAction($req, $res, $router, $traceId);
+                    });
+            });
+    }
 
-	/**
-	 * @description 初始化弟自定义的Bootstrap
-	 *
-	 * @param Application $app
-	 *
-	 * @return null
-	 */
-	public function __initCustomBoot(Application $app)
-	{
-		$bootstrap = $app->getConfig()['boot'] ?? 'application/Bootstrap.php';
-		$file = APPLICATION_PATH . '/' . $bootstrap;
-		if (!is_file($file)) {
-			return $this;
-		}
+    /**
+     * @description 初始化进程
+     *
+     * @param Application $app
+     *
+     * @return null
+     */
+    public function __initProcess(Application $app)
+    {
+        $app->registerProcess('kovey_config', (new Process\Config())->setProcessName(Manager::get('server.server.name') . ' config'));
+        if (Manager::get('server.session.open') === 'On' && Manager::get('server.session.type') === 'file') {
+            $app->registerProcess('kovey_session', new ClearSession());
+        }
+    }
 
-		require_once $file;
+    /**
+     * @description 初始化弟自定义的Bootstrap
+     *
+     * @param Application $app
+     *
+     * @return null
+     */
+    public function __initCustomBoot(Application $app)
+    {
+        $bootstrap = $app->getConfig()['boot'] ?? 'application/Bootstrap.php';
+        $file = APPLICATION_PATH . '/' . $bootstrap;
+        if (!is_file($file)) {
+            return $this;
+        }
 
-		$app->registerCustomBootstrap(new \Bootstrap());
-	}
+        require_once $file;
 
-	/**
-	 * @description 初始化路由
-	 *
-	 * @param Application $app
-	 *
-	 * @return null
-	 */
-	public function __initRouters(Application $app)
-	{
-		$path = APPLICATION_PATH . '/' . $app->getConfig()['routers'];
-		if (!is_dir($path)) {
-			return;
-		}
+        $app->registerCustomBootstrap(new \Bootstrap());
+    }
 
-		Route::setApp($app);
+    /**
+     * @description 初始化路由
+     *
+     * @param Application $app
+     *
+     * @return null
+     */
+    public function __initRouters(Application $app)
+    {
+        $path = APPLICATION_PATH . '/' . $app->getConfig()['routers'];
+        if (!is_dir($path)) {
+            return;
+        }
 
-		$files = scandir($path);
-		foreach ($files as $file) {
-			if (substr($file, -3) !== 'php') {
-				continue;
-			}
+        Route::setApp($app);
 
-			require_once($path . '/' . $file);
-		}
-	}
+        $files = scandir($path);
+        foreach ($files as $file) {
+            if (substr($file, -3) !== 'php') {
+                continue;
+            }
+
+            require_once($path . '/' . $file);
+        }
+    }
 }
