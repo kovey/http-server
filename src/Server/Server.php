@@ -409,6 +409,7 @@ class Server
                 'request_method' => $reqMethod,
                 'params' => $params,
                 'request_time' => $begin * 10000,
+                'service' => $this->config['name'],
                 'class' => $class,
                 'method' => $method,
                 'ip' => $ip,
@@ -417,7 +418,9 @@ class Server
                 'minute' => date('YmdHi', $time),
                 'http_code' => $code,
                 'response' => $body,
-                'traceId' => $traceId
+                'traceId' => $traceId,
+                'from' => $this->config['name'],
+                'end' => $end * 10000
             ));
         } catch (\Throwable $e) {
             Logger::writeExceptionLog(__LINE__, __FILE__, $e);
