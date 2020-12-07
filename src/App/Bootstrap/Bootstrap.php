@@ -100,9 +100,9 @@ class Bootstrap
             ->on('pipeline', function (RequestInterface $req, ResponseInterface $res, RouterInterface $router, string $traceId) use($app) {
                 return (new Pipeline($app->getContainer()))
                     ->via('handle')
-                    ->send($req, $res)
+                    ->send($req, $res, $traceId)
                     ->through(array_merge($app->getDefaultMiddlewares(), $router->getMiddlewares()))
-                    ->then(function (RequestInterface $req, ResponseInterface $res) use ($router, $app, $traceId) {
+                    ->then(function (RequestInterface $req, ResponseInterface $res, $traceId) use ($router, $app) {
                         return $app->runAction($req, $res, $router, $traceId);
                     });
             });

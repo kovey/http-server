@@ -360,7 +360,7 @@ class Application implements AppInterface
                 $result = $this->runAction($req, $res, $router, $traceId);
             }
         } catch (\Throwable $e) {
-            Logger::writeErrorLog(__LINE__, __FILE__, $e, $traceId);
+            Logger::writeExceptionLog(__LINE__, __FILE__, $e, $traceId);
             $result = array(
                 'httpCode' => ErrorTemplate::HTTP_CODE_500,
                 'header' => array(
@@ -385,8 +385,12 @@ class Application implements AppInterface
      */
     public function monitor(Array $data) : void
     {
-        $this->userProcess->push('monitor', $data);
         Monitor::write($data);
+        if (isset($this->events['monitor'])) {
+            go (function ($data) {
+                call_user_func($this->events['monitor'], $data);
+            }, $data);
+        }
     }
 
     /**
