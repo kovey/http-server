@@ -46,6 +46,13 @@ class Pipeline implements PipelineInterface
     private ResponseInterface $response;
 
     /**
+     * @description trace id
+     *
+     * @var string
+     */
+    private string $traceId;
+
+    /**
      * @description 构造
      *
      * @param ContainerInterface $container
@@ -64,12 +71,15 @@ class Pipeline implements PipelineInterface
      *
      * @param ResponseInterface $response
      *
+     * @param string $traceId
+     *
      * @return Pipeline
      */
-    public function send(RequestInterface $request, ResponseInterface $response) : PipelineInterface
+    public function send(RequestInterface $request, ResponseInterface $response, string $traceId) : PipelineInterface
     {
         $this->request = $request;
         $this->response = $response;
+        $this->traceId = $traceId;
         return $this;
     }
 
@@ -112,7 +122,7 @@ class Pipeline implements PipelineInterface
             array_reverse($this->middlewares), $this->carry(), $this->prepareDestination($destination)
         );
 
-        return $pipeline($this->request, $this->response);
+        return $pipeline($this->request, $this->response, $this->traceId);
     }
 
     /**
@@ -123,17 +133,17 @@ class Pipeline implements PipelineInterface
     protected function carry() : callable
     {
         return function ($stack, $pipe) {
-            return function ($request, $response) use ($stack, $pipe) {
+            return function ($request, $response, $traceId) use ($stack, $pipe) {
                 if (is_callable($pipe)) {
-                    return call_user_func($pipe, $request, $response, $stack);
+                    return call_user_func($pipe, $request, $response, $stack, $traceId);
                 } elseif (! is_object($pipe)) {
                     list($name, $parameters) = $this->parsePipeString($pipe);
 
-                    $pipe = $this->container->get($name);
+                    $pipe = $this->container->get($name, $traceId);
 
-                    $parameters = array_merge([$request, $response, $stack], $parameters);
+                    $parameters = array_merge([$request, $response, $stack, $traceId], $parameters);
                 } else {
-                    $parameters = [$request, $response, $stack];
+                    $parameters = [$request, $response, $stack, $traceId];
                 }
 
                 return $pipe->{$this->method}(...$parameters);
@@ -150,8 +160,8 @@ class Pipeline implements PipelineInterface
      */
     protected function prepareDestination(callable $destination) : callable
     {
-        return function ($request, $response) use ($destination) {
-            return call_user_func($destination, $request, $response);
+        return function ($request, $response, $traceId) use ($destination) {
+            return call_user_func($destination, $request, $response, $traceId);
         };
     }
 

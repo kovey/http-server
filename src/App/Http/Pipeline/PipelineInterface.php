@@ -33,9 +33,11 @@ interface PipelineInterface
      *
      * @param ResponseInterface $response
      *
+     * @param string $traceId
+     *
      * @return PipelineInterface
      */
-    public function send(RequestInterface $request, ResponseInterface $response) : PipelineInterface;
+    public function send(RequestInterface $request, ResponseInterface $response, string $traceId) : PipelineInterface;
 
     /**
      * @description 设置中间件
