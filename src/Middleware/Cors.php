@@ -27,9 +27,9 @@ class Cors implements MiddlewareInterface
      *
      * @return mixed
      */
-    public function handle(RequestInterface $req, ResponseInterface $res, callable $next)
+    public function handle(RequestInterface $req, ResponseInterface $res, callable $next, string $traceId)
     {
         $req->processCors();
-        return $next($req, $res);
+        return $next($req, $res, $traceId);
     }
 }

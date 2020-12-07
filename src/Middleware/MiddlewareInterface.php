@@ -25,7 +25,9 @@ interface MiddlewareInterface
      *
      * @param callable $next
      *
+     * @param string $traceId
+     *
      * @return mixed
      */
-    public function handle(RequestInterface $req, ResponseInterface $res, callable $next);
+    public function handle(RequestInterface $req, ResponseInterface $res, callable $next, string $traceId);
 }

@@ -47,10 +47,10 @@ class Validator implements MiddlewareInterface
      *
      * @param callable $next
      */
-    public function handle(RequestInterface $req, ResponseInterface $res, callable $next)
+    public function handle(RequestInterface $req, ResponseInterface $res, callable $next, string $traceId)
     {
         if (empty($this->rules)) {
-            return $next($req, $res);
+            return $next($req, $res, $traceId);
         }
 
         $data = null;
@@ -82,6 +82,6 @@ class Validator implements MiddlewareInterface
             return $res;
         }
 
-        return $next($req, $res);
+        return $next($req, $res, $traceId);
     }
 }

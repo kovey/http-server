@@ -29,7 +29,7 @@ class SessionStart implements MiddlewareInterface
      *
      * @return mixed
      */
-    public function handle(RequestInterface $req, ResponseInterface $res, callable $next)
+    public function handle(RequestInterface $req, ResponseInterface $res, callable $next, string $traceId)
     {
         $cookie = $req->getCookie();
         $sessionId = $cookie['kovey_session_id'] ?? '';
@@ -37,6 +37,6 @@ class SessionStart implements MiddlewareInterface
         $res->setCookie('kovey_session_id', $session->getSessionId(), strtotime('+1 Hour'));
         $req->setSession($session);
 
-        return $next($req, $res);
+        return $next($req, $res, $traceId);
     }
 }
