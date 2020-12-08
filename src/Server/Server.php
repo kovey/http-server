@@ -315,12 +315,16 @@ class Server
 
         $begin = microtime(true);
         $time = time();
+        $trace = '';
+        $err = '';
 
         $result = array();
         $traceId = $this->getTraceId($request->server['request_uri']);
         try {
             $result = call_user_func($this->events['workflow'], $request, $traceId);
         } catch (\Throwable $e) {
+            $trace = $e->getTraceAsString();
+            $err = $e->getMessage();
             Logger::writeExceptionLog(__LINE__, __FILE__, $e, $traceId);
             $result = array(
                 'httpCode' => ErrorTemplate::HTTP_CODE_500,
@@ -351,7 +355,7 @@ class Server
         $response->end($body);
         $this->monitor(
             $begin, microtime(true), $request->server['request_uri'] ?? '/', $this->getData($request), $request->server['remote_addr'] ?? '', $time, 
-            $httpCode, $body, $traceId, $result['class'] ?? '', $result['method'] ?? '', $request->server['request_method']
+            $httpCode, $body, $traceId, $result['class'] ?? '', $result['method'] ?? '', $request->server['request_method'], $trace, $err
         );
     }
 
@@ -396,7 +400,10 @@ class Server
      * @param string $body
      *
      */
-    private function monitor(float $begin, float $end, string $uri, string $params, string $ip, int $time, int $code, string $body, string $traceId, string $class, string $method, string $reqMethod)
+    private function monitor(
+        float $begin, float $end, string $uri, string $params, string $ip, int $time, int $code, string $body, string $traceId,
+        string $class, string $method, string $reqMethod, string $trace, string $err
+    )
     {
         if (!isset($this->events['monitor'])) {
             return;
@@ -410,6 +417,7 @@ class Server
                 'params' => $params,
                 'request_time' => $begin * 10000,
                 'service' => $this->config['name'],
+                'service_type' => 'http',
                 'class' => $class,
                 'method' => $method,
                 'ip' => $ip,
@@ -420,7 +428,9 @@ class Server
                 'response' => $body,
                 'traceId' => $traceId,
                 'from' => $this->config['name'],
-                'end' => $end * 10000
+                'end' => $end * 10000,
+                'trace' => $trace,
+                'err' => $err
             ));
         } catch (\Throwable $e) {
             Logger::writeExceptionLog(__LINE__, __FILE__, $e, $traceId);
