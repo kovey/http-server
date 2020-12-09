@@ -353,10 +353,12 @@ class Server
 
         $body = $result['content'] ?? ErrorTemplate::getContent($httpCode);
         $response->end($body);
-        $this->monitor(
-            $begin, microtime(true), $request->server['request_uri'] ?? '/', $this->getData($request), $request->server['remote_addr'] ?? '', $time, 
-            $httpCode, $body, $traceId, $result['class'] ?? '', $result['method'] ?? '', $request->server['request_method'], $trace, $err
-        );
+        if (!isset($this->config['monitor_open']) || $this->config['monitor_open'] !== 'Off') {
+            $this->monitor(
+                $begin, microtime(true), $request->server['request_uri'] ?? '/', $this->getData($request), $request->server['remote_addr'] ?? '', $time, 
+                $httpCode, $body, $traceId, $result['class'] ?? '', $result['method'] ?? '', $request->server['request_method'], $trace, $err
+            );
+        }
     }
 
     /**

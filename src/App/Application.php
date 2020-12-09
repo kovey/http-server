@@ -817,4 +817,19 @@ class Application implements AppInterface
         $this->userProcess = $userProcess;
         return $this;
     }
+
+    /**
+     * @description disable default router
+     *
+     * @return Application
+     */
+    public function disableDefaultRouter() : Application
+    {
+        if (!$this->routers instanceof RoutersInterface) {
+            return $this;
+        }
+
+        $this->routers->disableDefault();
+        return $this;
+    }
 }
