@@ -322,6 +322,8 @@ class Server
         $traceId = $this->getTraceId($request->server['request_uri']);
         try {
             $result = call_user_func($this->events['workflow'], $request, $traceId);
+            $trace = $result['trace'] ?? '';
+            $err = $result['err'] ?? '';
         } catch (\Throwable $e) {
             $trace = $e->getTraceAsString();
             $err = $e->getMessage();

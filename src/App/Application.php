@@ -367,7 +367,9 @@ class Application implements AppInterface
                     'content-type' => 'text/html'
                 ),
                 'content' => ErrorTemplate::getContent(ErrorTemplate::HTTP_CODE_500),
-                'cookie' => array()
+                'cookie' => array(),
+                'err' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             );
         }
 
