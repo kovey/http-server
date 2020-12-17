@@ -357,7 +357,7 @@ class Server
         $response->end($body);
         if (!isset($this->config['monitor_open']) || $this->config['monitor_open'] !== 'Off') {
             $this->monitor(
-                $begin, microtime(true), $request->server['request_uri'] ?? '/', $this->getData($request), $request->server['remote_addr'] ?? '', $time, 
+                $begin, microtime(true), $request->server['request_uri'] ?? '/', $this->getData($request), $this->getClientIP($request), $time, 
                 $httpCode, $body, $traceId, $result['class'] ?? '', $result['method'] ?? '', $request->server['request_method'], $trace, $err
             );
         }
@@ -485,5 +485,31 @@ class Server
     public function getTraceId(string $prefix) : string
     {
         return hash('sha256', uniqid($prefix, true) . random_int(1000000, 9999999));
+    }
+
+    /**
+     * @description get client ip
+     *
+     * @return string
+     */
+    public function getClientIP(\Swoole\Http\Request $request)
+    {
+        if (isset($request->header['x-real-ip'])) {
+            return $request->header['x-real-ip'];
+        }
+
+        if (isset($request->header['x-forwarded-for'])) {
+            return $request->header['x-forwarded-for'];
+        }
+
+        if (isset($request->header['client-ip'])) {
+            return $request->header['client-ip'];
+        }
+
+        if (isset($request->header['remote_addr'])) {
+            return $request->header['remote_addr'];
+        }
+
+        return '';
     }
 }
