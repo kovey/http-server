@@ -217,7 +217,7 @@ class Request implements RequestInterface
     {
         foreach ($this->req->header as $key => $value) {
             $_key = 'HTTP_' . strtoupper(str_replace('-', '_', $key));
-            $this->server[$_key] = $value;
+            $this->server[$key] = $value;
         }
     }
 
@@ -238,13 +238,13 @@ class Request implements RequestInterface
      */
     public function getClientIP() : string
     {
-        if (isset($this->server['HTTP_X_REAL_IP']) and strcasecmp($this->server['HTTP_X_REAL_IP'], 'unknown')) {
+        if (isset($this->server['HTTP_X_REAL_IP']) && strcasecmp($this->server['HTTP_X_REAL_IP'], 'unknown')) {
             return $this->server['HTTP_X_REAL_IP'];
         }
-        if (isset($this->server['HTTP_CLIENT_IP']) and strcasecmp($this->server['HTTP_CLIENT_IP'], 'unknown')) {
+        if (isset($this->server['HTTP_CLIENT_IP']) && strcasecmp($this->server['HTTP_CLIENT_IP'], 'unknown')) {
             return $this->server['HTTP_CLIENT_IP'];
         }
-        if (isset($this->server['HTTP_X_FORWARDED_FOR']) and strcasecmp($this->server['HTTP_X_FORWARDED_FOR'], 'unknown')) {
+        if (isset($this->server['HTTP_X_FORWARDED_FOR']) && strcasecmp($this->server['HTTP_X_FORWARDED_FOR'], 'unknown')) {
             return $this->server['HTTP_X_FORWARDED_FOR'];
         }
         if (isset($this->server['REMOTE_ADDR'])) {
