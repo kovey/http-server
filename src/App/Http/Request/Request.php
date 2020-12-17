@@ -216,7 +216,7 @@ class Request implements RequestInterface
     private function setGlobal()
     {
         foreach ($this->req->header as $key => $value) {
-            $_key = 'HTTP_' . strtoupper(str_replace('-', '_', $key));
+            $key = 'HTTP_' . strtoupper(str_replace('-', '_', $key));
             $this->server[$key] = $value;
         }
     }
