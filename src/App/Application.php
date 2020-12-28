@@ -546,7 +546,7 @@ class Application implements AppInterface
                 if (isset($this->events['run_action'])) {
                     $content = call_user_func($this->events['run_action'], $obj, $action, ...$this->container->getMethodArguments($router->getClassName(), $action, $traceId));
                 } else {
-                    $content = $obj->$action(...$this->container->getMethodArguments($router->getClassName(), $action, $traceId));
+                    $content = call_user_func(array($obj, $action), ...$this->container->getMethodArguments($router->getClassName(), $action, $traceId));
                 }
                 $objectExt['database']->getConnection()->commit();
             } catch (\Throwable $e) {
@@ -557,7 +557,7 @@ class Application implements AppInterface
             if (isset($this->events['run_action'])) {
                 $content = call_user_func($this->events['run_action'], $obj, $action, ...$this->container->getMethodArguments($router->getClassName(), $action, $traceId));
             } else {
-                $content = $obj->$action(...$this->container->getMethodArguments($router->getClassName(), $action, $traceId));
+                $content = call_user_func(array($obj, $action), ...$this->container->getMethodArguments($router->getClassName(), $action, $traceId));
             }
         }
 
