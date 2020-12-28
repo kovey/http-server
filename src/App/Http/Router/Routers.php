@@ -66,6 +66,7 @@ class Routers implements RoutersInterface
         $this->postRoutes = array();
         $this->putRoutes = array();
         $this->delRoutes = array();
+        $this->defaults = array();
     }
 
     /**

@@ -45,14 +45,6 @@ class Request implements RequestInterface
     private \Swoole\Http\Request $req;
 
     /**
-     * @description 请求信息
-     *
-     * @var Array
-     *
-     */
-    private Array $request;
-
-    /**
      * @description 请求BODY
      *
      * @var string
