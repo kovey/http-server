@@ -511,18 +511,19 @@ class Application implements AppInterface
             return $res->toArray();
         }
 
-        $objectExt = $this->container->getKeywords($router->getClassName(), $router->getActionName());
-        $template = APPLICATION_PATH . '/' . $this->config['views'] . '/' . $router->getViewPath() . '.' . $this->config['template'];
-        $obj = $this->container->get($router->getClassName(), $traceId, $objectExt['ext'], $req, $res, $this->plugins);
-        if (!$obj instanceof ControllerInterface) {
-            Logger::writeErrorLog(__LINE__, __FILE__, "class \"$controller\" is not extends Kovey\Web\App\Mvc\Controller\ControllerInterface.", $traceId);
+        $action = $router->getActionName();
+        try {
+            $objectExt = $this->container->getKeywords($router->getClassName(), $action);
+        } catch (\ReflectionException $e) {
+            Logger::writeExceptionLog(__LINE__, __FILE__, $e, $traceId);
             $res->status(404);
             return $res->toArray();
         }
 
-        $action = $router->getActionName();
-        if (!method_exists($obj, $action)) {
-            Logger::writeErrorLog(__LINE__, __FILE__, "action \"$action\" is not exists.", $traceId);
+        $template = APPLICATION_PATH . '/' . $this->config['views'] . '/' . $router->getViewPath() . '.' . $this->config['template'];
+        $obj = $this->container->get($router->getClassName(), $traceId, $objectExt['ext'], $req, $res, $this->plugins);
+        if (!$obj instanceof ControllerInterface) {
+            Logger::writeErrorLog(__LINE__, __FILE__, "class \"$controller\" is not extends Kovey\Web\App\Mvc\Controller\ControllerInterface.", $traceId);
             $res->status(404);
             return $res->toArray();
         }
