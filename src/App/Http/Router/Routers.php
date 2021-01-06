@@ -115,7 +115,7 @@ class Routers implements RoutersInterface
      */
     public function isUri(string $uri) : bool
     {
-        return (bool)preg_match('/^\/[a-z]+(\/[a-z][a-z0-9]+){0,2}(\/.+){0,1}$/', $uri);
+        return (bool)preg_match('/^\/[a-zA-Z]+(\/[a-zA-Z][a-zA-Z0-9]+){0,3}(\/.+){0,1}$/', $uri);
     }
 
     /**
