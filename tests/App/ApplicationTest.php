@@ -16,14 +16,15 @@ use Kovey\Web\App\Bootstrap\Autoload;
 use Kovey\Web\Middleware\Cors;
 use Kovey\Web\App\Http\Router\Routers;
 use Kovey\Web\Server\Server;
-use Kovey\Library\Container\Container;
-use Kovey\Library\Container\ContainerInterface;
+use Kovey\Container\Container;
+use Kovey\Container\ContainerInterface;
 use Kovey\Library\Process\UserProcess;
 use Kovey\Connection\Pool\Mysql;
 use Kovey\Connection\Pool\PoolInterface;
 use Kovey\Db\Adapter;
 use Kovey\Library\Config\Manager;
 use Swoole\Http\Request as SHR;
+use Swoole\Http\Response as SHS;
 use Kovey\Web\App\Http\Request\Request;
 use Kovey\Web\App\Http\Response\Response;
 use Kovey\Web\App\Http\Request\RequestInterface;
@@ -31,6 +32,7 @@ use Kovey\Web\App\Http\Response\ResponseInterface;
 use Kovey\Web\App\Mvc\View\Sample;
 use Kovey\Web\App\Http\Pipeline\Pipeline;
 use Kovey\Library\Util\Json;
+use Kovey\Web\Event;
 
 class ApplicationTest extends TestCase
 {
@@ -44,6 +46,7 @@ class ApplicationTest extends TestCase
 
     public function setUp() : void
     {
+        $this->res = $this->createMock(SHS::class);
         $this->req = $this->createMock(SHR::class);
         $this->req->method('getContent')
              ->willReturn(Json::encode(array('kovey' => 'framework', 'http' => 'server')));
@@ -109,13 +112,15 @@ class ApplicationTest extends TestCase
 
     public function testRegisterConsole()
     {
-        Application::getInstance()->on('console', function (string $path, string $method, Array $args) {
-            $this->assertEquals('path', $path);
-            $this->assertEquals('method', $method);
-            $this->assertEquals(array('path', 'method'), $args);
+        Application::getInstance()->on('console', function (Event\Console $event) {
+            $this->assertEquals('path', $event->getPath());
+            $this->assertEquals('method', $event->getMethod());
+            $this->assertEquals(array('path', 'method'), $event->getArgs());
+            $this->assertEquals(hash('sha256', '123456'), $event->getTraceId());
         });
 
-        Application::getInstance()->console('path', 'method', array('path', 'method'));
+        $console = new Event\Console('path', 'method', array('path', 'method'), hash('sha256', '123456'));
+        Application::getInstance()->console($console);
     }
 
     public function testRegisterContainer()
@@ -152,24 +157,26 @@ class ApplicationTest extends TestCase
 
     public function testWokerflow()
     {
-        Application::getInstance()->on('request', function ($req) {
-            return new Request($req);
+        Application::getInstance()->on('request', function (Event\Request $event) {
+            return new Request($event->getRequest());
         });
-        Application::getInstance()->on('response', function () {
+        Application::getInstance()->on('response', function (Event\Response $event) {
             return new Response();
         });
-        Application::getInstance()->on('pipeline', function ($req, $res, $router, $traceId) {
+        Application::getInstance()->on('pipeline', function (Event\Pipeline $event) {
             return (new Pipeline(Application::getInstance()->getContainer()))
                 ->via('handle')
-                ->send($req, $res)
-                ->through(array_merge(Application::getInstance()->getDefaultMiddlewares(), $router->getMiddlewares()))
-                ->then(function (RequestInterface $req, ResponseInterface $res) use ($router, $traceId) {
-                    return Application::getInstance()->runAction($req, $res, $router, $traceId);
+                ->send($event->getRequest(), $event->getResponse(), $event->getTraceId())
+                ->through(array_merge(Application::getInstance()->getDefaultMiddlewares(), $event->getRouter()->getMiddlewares()))
+                ->then(function (RequestInterface $req, ResponseInterface $res, string $traceId) use ($event) {
+                    return Application::getInstance()->runAction($req, $res, $event->getRouter(), $traceId);
                 });
         });
-        Application::getInstance()->on('view', function ($con, $template) {
-            $con->setView(new Sample($con->getResponse(), $template));
+        Application::getInstance()->on('view', function (Event\View $event) {
+            $event->getController()->setView(new Sample($event->getController()->getResponse(), $event->getTemplate()));
         });
+
+        $workflow = new Event\Workflow($this->req, $this->res, hash('sha256', '123456'));
         $this->assertEquals(array(
             'httpCode' => 200,
             'content' => "<p>framework<p>\n<p>server<p>\n",
@@ -179,8 +186,10 @@ class ApplicationTest extends TestCase
                 'Content-Type' => 'text/html; charset=utf-8',
                 'Content-Length' => 29
             ),
-            'cookie' => array()
-        ), Application::getInstance()->workflow($this->req, hash('sha256', '123456')));
+            'cookie' => array(),
+            'class' => 'koveyController',
+            'method' => 'testAction'
+        ), Application::getInstance()->workflow($workflow));
     }
 
     public function tearDown() : void

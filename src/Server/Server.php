@@ -12,8 +12,14 @@
 namespace Kovey\Web\Server;
 
 use Swoole\Http\Response;
+use Swoole\Http\Request;
+use Swoole\Server\PipeMessage;
 use Kovey\Logger\Logger;
 use Kovey\Library\Util\Json;
+use Kovey\Event\Dispatch;
+use Kovey\Event\Listener\Listener;
+use Kovey\Event\Listener\ListenerProvider;
+use Kovey\Web\Event;
 
 class Server
 {
@@ -30,13 +36,6 @@ class Server
      * @var Array
      */
     private Array $config;
-
-    /**
-     * @description 事件
-     *
-     * @var Array
-     */
-    private Array $events;
 
     /**
      * @description 允许的事件类型
@@ -60,6 +59,20 @@ class Server
     private bool $isRunDocker;
 
     /**
+     * @description dispatch
+     *
+     * @var Dispatch
+     */
+    private Dispatch $dispatch;
+    
+    /**
+     * @description listener provider
+     *
+     * @var ListenerProvider
+     */
+    private ListenerProvider $provider;
+
+    /**
      * @description 构造
      *
      * @param Array $config
@@ -71,15 +84,17 @@ class Server
         $this->config = $config;
         $this->isRunDocker = ($this->config['run_docker'] ?? 'Off') === 'On';
         $this->serv = new \Swoole\Http\Server($this->config['host'], intval($this->config['port']));
-        $this->events = array();
         $this->eventsTypes = array(
-            'startedBefore' => 1, 
-            'startedAfter' => 1, 
-            'workflow' => 1, 
-            'init' => 1, 
-            'console' => 1,
-            'monitor' => 1
+            'startedBefore' => Event\StartedBefore::class, 
+            'startedAfter' => Event\StartedAfter::class, 
+            'workflow' => Event\Workflow::class, 
+            'init' => Event\Init::class, 
+            'console' => Event\Console::class,
+            'monitor' => Event\Monitor::class
         );
+
+        $this->provider = new ListenerProvider();
+        $this->dispatch = new Dispatch($this->provider);
 
         $this->init();
     }
@@ -89,11 +104,11 @@ class Server
      *
      * @param string $name
      *
-     * @param $callback
+     * @param callable | Array $callback
      *
      * @return Server
      */
-    public function on(string $name, $callback)
+    public function on(string $name, callable | Array $callback)
     {
         if (!isset($this->eventsTypes[$name])) {
             return $this;
@@ -103,7 +118,10 @@ class Server
             return $this;
         }
 
-        $this->events[$name] = $callback;
+        $listener = new Listener();
+        $listener->addEvent($this->eventsTypes[$name], $callback);
+        $this->provider->addListener($listener);
+
         return $this;
     }
 
@@ -134,14 +152,14 @@ class Server
             'worker_num' => $this->config['worker_num'],
             'enable_coroutine' => true,
             'max_coroutine' => $this->config['max_co'],
-            'package_max_length' => $this->getBytes($this->config['package_max_length'])
+            'package_max_length' => $this->getBytes($this->config['package_max_length']),
+            'event_object' => true
         ));
 
         $this->scanStaticDir();
 
-        if (isset($this->events['startedBefore'])) {
-            call_user_func($this->events['startedBefore'], $this);
-        }
+        $event = new Event\StartedBefore($this);
+        $this->dispatch->dispatch($event);
 
         $this->initCallBack();
         return $this;
@@ -212,6 +230,7 @@ class Server
         $this->serv->on('request', array($this, 'request'));
         $this->serv->on('close', array($this, 'close'));
         $this->serv->on('pipeMessage', array($this, 'pipeMessage'));
+        $this->serv->on('workerError', array($this, 'workerError'));
 
         return $this;
     }
@@ -227,19 +246,19 @@ class Server
      *
      * @return null
      */
-    public function pipeMessage(\Swoole\Http\Server $serv, int $workerId, $data)
+    public function pipeMessage(\Swoole\Http\Server $serv, PipeMessage $message)
     {
         try {
-            if (!isset($this->events['console'])) {
-                return;
-            }
-
-            go(function () use ($data, $workerId) {
-                call_user_func($this->events['console'], $data['p'] ?? '', $data['m'] ?? '', $data['a'] ?? array(), $data['t'] ?? '');
-            });
+            $event = new Event\Console($message->data['p'] ?? '', $message->data['m'] ?? '', $message->data['a'] ?? array(), $message->data['t'] ?? '');
+            $this->dispatch->dispatch($event);
         } catch (\Throwable $e) {
-            Logger::writeExceptionLog(__LINE__, __FILE__, $e, $data['t'] ?? '');
+            Logger::writeExceptionLog(__LINE__, __FILE__, $e, $message->data['t'] ?? '');
         }
+    }
+
+    public function workerError(\Swoole\Http\Server $serv, \Swoole\Server\StatusInfo $info)
+    {
+        //Logger::writeErrorLog(__LINE__, __FILE__, $info);
     }
 
     /**
@@ -267,11 +286,8 @@ class Server
     {
         ko_change_process_name($this->config['name'] . ' worker');
 
-        if (!isset($this->events['init'])) {
-            return;
-        }
-
-        call_user_func($this->events['init'], $this);
+        $event = new Event\Init($this);
+        $this->dispatch->dispatch($event);
     }
 
     /**
@@ -306,13 +322,6 @@ class Server
             return;
         }
 
-        if (!isset($this->events['workflow'])) {
-            $response->status(ErrorTemplate::HTTP_CODE_500);
-            $response->header('content-type', 'text/html');
-            $response->end(ErrorTemplate::getContent(ErrorTemplate::HTTP_CODE_500));
-            return;
-        }
-
         $begin = microtime(true);
         $time = time();
         $trace = '';
@@ -321,7 +330,8 @@ class Server
         $result = array();
         $traceId = $this->getTraceId($request->server['request_uri']);
         try {
-            $result = call_user_func($this->events['workflow'], $request, $traceId);
+            $event = new Event\Workflow($request, $response, $traceId);
+            $result = $this->dispatch->dispatchWithReturn($event);
             $trace = $result['trace'] ?? '';
             $err = $result['err'] ?? '';
         } catch (\Throwable $e) {
@@ -409,12 +419,8 @@ class Server
         string $class, string $method, string $reqMethod, string $trace, string $err
     )
     {
-        if (!isset($this->events['monitor'])) {
-            return;
-        }
-
         try {
-            call_user_func($this->events['monitor'], array(
+            $event = new Event\Monitor(array(
                 'delay' => round(($end - $begin) * 1000, 2),
                 'path' => $uri,
                 'request_method' => $reqMethod,
@@ -436,6 +442,7 @@ class Server
                 'trace' => $trace,
                 'err' => $err
             ));
+            $this->dispatch->dispatch($event);
         } catch (\Throwable $e) {
             Logger::writeExceptionLog(__LINE__, __FILE__, $e, $traceId);
         }

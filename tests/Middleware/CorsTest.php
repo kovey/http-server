@@ -53,9 +53,9 @@ class CorsTest extends TestCase
     public function testCors()
     {
         $cors = new Cors();
-        $this->assertTrue($cors->handle(new Request($this->req), new Response(), function ($request, $response) {
+        $this->assertTrue($cors->handle(new Request($this->req), new Response(), function (Request $request, Response $response, string $traceId) {
             $this->assertEquals('&lt;script src=&quot;https://www.kovey.cn/js/test.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;', $request->getQuery('text'));
             return true;
-        }));
+        }, hash('sha256', '123456')));
     }
 }

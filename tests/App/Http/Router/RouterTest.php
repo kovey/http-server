@@ -23,7 +23,7 @@ class RouterTest extends TestCase
         $this->assertEquals('index', $router->getController());
         $this->assertEquals('/Index.php', $router->getClassPath());
         $this->assertEquals('indexAction', $router->getActionName());
-        $this->assertEquals('\IndexController', $router->getClassName());
+        $this->assertEquals('IndexController', $router->getClassName());
         $this->assertEquals('/index/index', $router->getViewPath());
         $this->assertEquals(null, $router->getCallable());
         $this->assertEquals('/', $router->getUri());
@@ -37,7 +37,7 @@ class RouterTest extends TestCase
         $this->assertEquals('kovey', $router->getController());
         $this->assertEquals('/Kovey.php', $router->getClassPath());
         $this->assertEquals('indexAction', $router->getActionName());
-        $this->assertEquals('\KoveyController', $router->getClassName());
+        $this->assertEquals('KoveyController', $router->getClassName());
         $this->assertEquals('/kovey/index', $router->getViewPath());
         $this->assertEquals(null, $router->getCallable());
         $this->assertEquals('/kovey', $router->getUri());
@@ -51,7 +51,7 @@ class RouterTest extends TestCase
         $this->assertEquals('kovey', $router->getController());
         $this->assertEquals('/Kovey.php', $router->getClassPath());
         $this->assertEquals('testAction', $router->getActionName());
-        $this->assertEquals('\KoveyController', $router->getClassName());
+        $this->assertEquals('KoveyController', $router->getClassName());
         $this->assertEquals('/kovey/test', $router->getViewPath());
         $this->assertEquals(null, $router->getCallable());
         $this->assertEquals('/kovey/test', $router->getUri());

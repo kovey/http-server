@@ -13,7 +13,7 @@ namespace Kovey\Web\App\Http\Pipeline;
 
 use Kovey\Web\App\Http\Request\RequestInterface;
 use Kovey\Web\App\Http\Response\ResponseInterface;
-use Kovey\Library\Container\ContainerInterface;
+use Kovey\Container\ContainerInterface;
 
 class Pipeline implements PipelineInterface
 {

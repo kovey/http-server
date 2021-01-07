@@ -20,7 +20,7 @@ use Kovey\Web\App\Http\Router\RoutersInterface;
 use Kovey\Web\App\Mvc\Controller\ControllerInterface;
 use Kovey\Web\App\Mvc\View\ViewInterface;
 use Kovey\Library\Process\ProcessAbstract;
-use Kovey\Library\Container\ContainerInterface;
+use Kovey\Container\ContainerInterface;
 use Kovey\Web\Middleware\MiddlewareInterface;
 use Kovey\Web\App\Bootstrap\Autoload;
 use Kovey\Web\Server\Server;
@@ -29,6 +29,10 @@ use Kovey\Logger\Logger;
 use Kovey\Logger\Monitor;
 use Kovey\Library\Exception\KoveyException;
 use Kovey\Web\Server\ErrorTemplate;
+use Kovey\Web\Event;
+use Kovey\Event\Dispatch;
+use Kovey\Event\Listener\Listener;
+use Kovey\Event\Listener\ListenerProvider;
 
 class Application implements AppInterface
 {
@@ -103,18 +107,27 @@ class Application implements AppInterface
     private static ?Application $instance = null;
 
     /**
-     * @description 事件
-     *
-     * @var Array
-     */
-    private Array $events;
-
-    /**
      * @description 全局变量
      *
      * @var Array
      */
     private Array $globals;
+
+    private Dispatch $dispatch;
+
+    private ListenerProvider $provider;
+
+    private static Array $events = array(
+        'console' => Event\Console::class,
+        'monitor' => Event\Monitor::class,
+        'response' => Event\Response::class,
+        'request' => Event\Request::class,
+        'run_action' => Event\RunAction::class,
+        'pipeline' => Event\Pipeline::class,
+        'view' => Event\View::class
+    );
+
+    private Array $onEvents;
 
     /**
      * @description 获取对象实例
@@ -145,8 +158,10 @@ class Application implements AppInterface
         $this->plugins = array();
         $this->pools = array();
         $this->defaultMiddlewares = array();
-        $this->events = array();
         $this->globals = array();
+        $this->provider = new ListenerProvider();
+        $this->dispatch = new Dispatch($this->provider);
+        $this->onEvents = array();
     }
 
     private function __clone()
@@ -240,7 +255,7 @@ class Application implements AppInterface
         $this->server = $server;
         $this->server
             ->on('workflow', array($this, 'workflow'))
-            ->on('init', array($this, 'init'))
+            ->on('init', array($this, 'initPool'))
             ->on('console', array($this, 'console'))
             ->on('monitor', array($this, 'monitor'));
 
@@ -260,18 +275,14 @@ class Application implements AppInterface
      *
      * @return null
      */
-    public function console(string $path, string $method, Array $args, string $traceId) : void
+    public function console(Event\Console $event) : void
     {
-        if (!isset($this->events['console'])) {
-            return;
-        }
-
         try {
-            call_user_func($this->events['console'], $path, $method, $args, $traceId);
+            $this->dispatch->dispatch($event);
         } catch (\Exception $e) {
-            Logger::writeExceptionLog(__LINE__, __FILE__, $e, $traceId);
+            Logger::writeExceptionLog(__LINE__, __FILE__, $e, $event->getTraceId());
         } catch (\Throwable $e) {
-            Logger::writeExceptionLog(__LINE__, __FILE__, $e, $traceId);
+            Logger::writeExceptionLog(__LINE__, __FILE__, $e, $event->getTraceId());
         }
     }
 
@@ -319,29 +330,22 @@ class Application implements AppInterface
      *
      * @return Array
      */
-    public function workflow(\Swoole\Http\Request $request, string $traceId) : Array
+    public function workflow(Event\Workflow $event) : Array
     {
-        if (!isset($this->events['request'])
-            || !isset($this->events['response'])
-        ) {
-            Logger::writeErrorLog(__LINE__, __FILE__, 'request or response events is not exits.', $traceId);
-            return array();
-        }
-
-        $req = call_user_func($this->events['request'], $request);
+        $req = $this->dispatch->dispatchWithReturn(new Event\Request($event->getRequest()));
         if (!$req instanceof RequestInterface) {
-            Logger::writeErrorLog(__LINE__, __FILE__, 'request is not implements Kovey\Web\App\Http\Request\RequestInterface.', $traceId);
+            Logger::writeErrorLog(__LINE__, __FILE__, 'request is not implements Kovey\Web\App\Http\Request\RequestInterface.', $event->getTraceId());
             return array();
         }
-        $res = call_user_func($this->events['response']);
+        $res = $this->dispatch->dispatchWithReturn(new Event\Response());
         if (!$res instanceof ResponseInterface) {
-            Logger::writeErrorLog(__LINE__, __FILE__, 'request is not implements Kovey\Web\App\Http\Responset\ResponseInterface.', $traceId);
+            Logger::writeErrorLog(__LINE__, __FILE__, 'request is not implements Kovey\Web\App\Http\Response\ResponseInterface.', $event->getTraceId());
             return array();
         }
         $uri = trim($req->getUri());
         $router = $this->routers->getRouter($uri, $req->getMethod());
         if ($router === null) {
-            Logger::writeErrorLog(__LINE__, __FILE__, 'router is error, uri: ' . $uri, $traceId);
+            Logger::writeErrorLog(__LINE__, __FILE__, 'router is error, uri: ' . $uri, $event->getTraceId());
             $res->status('405');
             return $res->toArray();
         }
@@ -351,16 +355,12 @@ class Application implements AppInterface
 
         $result = null;
         try {
-            if (isset($this->events['pipeline'])) {
-                $result = call_user_func($this->events['pipeline'], $req, $res, $router, $traceId);
-                if ($result instanceof ResponseInterface) {
-                    $result = $result->toArray();
-                }
-            } else {
-                $result = $this->runAction($req, $res, $router, $traceId);
+            $result = $this->dispatch->dispatchWithReturn(new Event\Pipeline($req, $res, $router, $event->getTraceId()));
+            if ($result instanceof ResponseInterface) {
+                $result = $result->toArray();
             }
         } catch (\Throwable $e) {
-            Logger::writeExceptionLog(__LINE__, __FILE__, $e, $traceId);
+            Logger::writeExceptionLog(__LINE__, __FILE__, $e, $event->getTraceId());
             $result = array(
                 'httpCode' => ErrorTemplate::HTTP_CODE_500,
                 'header' => array(
@@ -385,14 +385,12 @@ class Application implements AppInterface
      *
      * @return null
      */
-    public function monitor(Array $data) : void
+    public function monitor(Event\Monitor $event) : void
     {
-        Monitor::write($data);
-        if (isset($this->events['monitor'])) {
-            go (function ($data) {
-                call_user_func($this->events['monitor'], $data);
-            }, $data);
-        }
+        Monitor::write($event->getData());
+        go (function ($event) {
+            $this->dispatch->dispatch($event);
+        }, $event);
     }
 
     /**
@@ -400,17 +398,25 @@ class Application implements AppInterface
      *
      * @param string $type
      *
-     * @param callable $fun
+     * @param callable | Array $fun
      *
      * @return Application
      */
-    public function on(string $type, $fun) : Application
+    public function on(string $type, callable | Array $fun) : Application
     {
+        if (!isset(self::$events[$type])) {
+            return $this;
+        }
+
         if (!is_callable($fun)) {
             return $this;
         }
 
-        $this->events[$type] = $fun;
+        $listener = new Listener();
+        $listener->addEvent(self::$events[$type], $fun);
+        $this->provider->addListener($listener);
+        $this->onEvents[$type] = 1;
+
         return $this;
     }
 
@@ -422,7 +428,7 @@ class Application implements AppInterface
     public function run()
     {
         if (!is_object($this->server)) {
-            throw new \Exception('server not register');
+            throw new KoveyException('server not register');
         }
 
         $this->server->start();
@@ -535,8 +541,8 @@ class Application implements AppInterface
             return $obj->getResponse()->toArray();
         }
 
-        if (!$obj->isViewDisabled() && isset($this->events['view'])) {
-            call_user_func($this->events['view'], $obj, $template);
+        if (!$obj->isViewDisabled()) {
+            $this->dispatch->dispatch(new Event\View($obj, $template));
         }
 
         $content = '';
@@ -544,8 +550,8 @@ class Application implements AppInterface
         if ($objectExt['openTransaction']) {
             $objectExt['database']->getConnection()->beginTransaction();
             try {
-                if (isset($this->events['run_action'])) {
-                    $content = call_user_func($this->events['run_action'], $obj, $action, ...$this->container->getMethodArguments($router->getClassName(), $action, $traceId));
+                if (isset($this->onEvents['run_action'])) {
+                    $content = $this->dispatch->dispatchWithReturn(new Event\RunAction($obj, $action, $this->container->getMethodArguments($router->getClassName(), $action, $traceId)));
                 } else {
                     $content = call_user_func(array($obj, $action), ...$this->container->getMethodArguments($router->getClassName(), $action, $traceId));
                 }
@@ -555,8 +561,8 @@ class Application implements AppInterface
                 throw $e;
             }
         } else {
-            if (isset($this->events['run_action'])) {
-                $content = call_user_func($this->events['run_action'], $obj, $action, ...$this->container->getMethodArguments($router->getClassName(), $action, $traceId));
+            if (isset($this->onEvents['run_action'])) {
+                $content = $this->dispatch->dispatchWithReturn(new Event\RunAction($obj, $action, $this->container->getMethodArguments($router->getClassName(), $action, $traceId)));
             } else {
                 $content = call_user_func(array($obj, $action), ...$this->container->getMethodArguments($router->getClassName(), $action, $traceId));
             }
@@ -696,7 +702,7 @@ class Application implements AppInterface
      *
      * @return null
      */
-    public function initPool(Server $serv)
+    public function initPool(Event\Init $event)
     {
         try {
             foreach ($this->pools as $pool) {

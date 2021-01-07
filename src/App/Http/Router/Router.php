@@ -122,7 +122,7 @@ class Router implements RouterInterface
             return;
         }
 
-        $this->className = str_replace('/', '\\', $this->classPath) . '\\' . ucfirst($this->controller) . 'Controller';
+        $this->className = trim(str_replace('/', '\\', $this->classPath) . '\\' . ucfirst($this->controller) . 'Controller', '\\');
         $this->viewPath = strtolower($this->classPath) . '/' . strtolower($this->controller) . '/' . strtolower($this->action);
         $this->classPath = $this->classPath . '/' . ucfirst($this->controller) . '.php';
         $this->actionName = $this->action . 'Action';

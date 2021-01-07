@@ -1,7 +1,7 @@
 <?php
 /**
  *
- * @description 整个运用启动前的初始化
+ * @description bootstrap when app start
  *
  * @package     App\Bootstrap
  *
@@ -21,7 +21,8 @@ use Kovey\Web\App\Http\Request\Request;
 use Kovey\Web\App\Http\Request\RequestInterface;
 use Kovey\Web\App\Http\Response\Response;
 use Kovey\Web\App\Http\Response\ResponseInterface;
-use Kovey\Library\Container\Container;
+use Kovey\Container\Container;
+use Kovey\Container\Event;
 use Kovey\Web\Middleware\SessionStart;
 use Kovey\Web\App\Http\Router\Routers;
 use Kovey\Web\App\Http\Router\Router;
@@ -33,6 +34,7 @@ use Kovey\Web\App\Http\Pipeline\Pipeline;
 use Kovey\Logger\Logger;
 use Kovey\Logger\Db;
 use Kovey\Logger\Monitor;
+use Kovey\Web\Event as WE;
 
 class Bootstrap
 {
@@ -88,22 +90,22 @@ class Bootstrap
      */
     public function __initEvents(Application $app)
     {
-        $app->on('request', function ($request) {
-                return new Request($request);
+        $app->on('request', function (WE\Request $event) {
+                return new Request($event->getRequest());
             })
-            ->on('response', function () {
+            ->on('response', function (WE\Response $event) {
                 return new Response();
             })
-            ->on('view', function (ControllerInterface $con, $template) {
-                $con->setView(new Sample($con->getResponse(), $template));
+            ->on('view', function (WE\View $event) {
+                $event->getController()->setView(new Sample($event->getController()->getResponse(), $event->getTemplate()));
             })
-            ->on('pipeline', function (RequestInterface $req, ResponseInterface $res, RouterInterface $router, string $traceId) use($app) {
+            ->on('pipeline', function (WE\Pipeline $event) use($app) {
                 return (new Pipeline($app->getContainer()))
                     ->via('handle')
-                    ->send($req, $res, $traceId)
-                    ->through(array_merge($app->getDefaultMiddlewares(), $router->getMiddlewares()))
-                    ->then(function (RequestInterface $req, ResponseInterface $res, $traceId) use ($router, $app) {
-                        return $app->runAction($req, $res, $router, $traceId);
+                    ->send($event->getRequest(), $event->getResponse(), $event->getTraceId())
+                    ->through(array_merge($app->getDefaultMiddlewares(), $event->getRouter()->getMiddlewares()))
+                    ->then(function (RequestInterface $req, ResponseInterface $res, $traceId) use ($event, $app) {
+                        return $app->runAction($req, $res, $event->getRouter(), $traceId);
                     });
             });
     }
@@ -167,5 +169,28 @@ class Bootstrap
 
             require_once($path . '/' . $file);
         }
+    }
+
+    public function __initParseInject(Application $app)
+    {
+        $app->getContainer()
+            ->on('Router', function (Event\Router $event) use ($app) {
+                $router = new Router($event->getPath());
+                if (!$router->isValid()) {
+                    return;
+                }
+
+                $method = strtolower($event->getMethod());
+                if ($method === 'post') {
+                    $app->registerPostRouter($event->getPath(), $router);
+                } else if ($method === 'get') {
+                    $app->registerGetRouter($event->getPath(), $router);
+                } else if ($method === 'put') {
+                    $app->registerPutRouter($event->getPath(), $router);
+                } else if ($method === 'delete') {
+                    $app->registerDelRouter($event->getPath(), $router);
+                }
+            })
+            ->parse(APPLICATION_PATH . '/' . $app->getConfig()['controllers'], '');
     }
 }

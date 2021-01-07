@@ -17,6 +17,9 @@ use Swoole\Http\Server as SHS;
 use Swoole\Http\Request as SHR;
 use Swoole\Http\Response as SHRO;
 use Kovey\Library\Util\Json;
+use Kovey\Logger\Logger;
+use Kovey\Web\Event;
+use Kovey\Event\Exception\EventException;
 
 class ServerTest extends TestCase
 {
@@ -83,13 +86,19 @@ class ServerTest extends TestCase
 
     public function testPipeMessage()
     {
-        self::$server->on('console', function ($path, $method, Array $args) {
-            $this->assertEquals('path', $path);
-            $this->assertEquals('method', $method);
-            $this->assertEquals(Array('kovey' => 'framework'), $args);
+        self::$server->on('console', function (Event\Console $console) {
+            $this->assertEquals('path', $console->getPath());
+            $this->assertEquals('method', $console->getMethod());
+            $this->assertEquals(Array('kovey' => 'framework'), $console->getArgs());
         });
 
-        self::$server->pipeMessage($this->swoole, 1, array('p' => 'path', 'm' => 'method', 'a' => array('kovey' => 'framework')));
+        $msg = new \Swoole\Server\PipeMessage();
+        $msg->data = array(
+            'p' => 'path',
+            'm' => 'method',
+            'a' => array('kovey' => 'framework')
+        );
+        self::$server->pipeMessage($this->swoole, $msg);
     }
 
     public function testManagerStart()
@@ -99,8 +108,8 @@ class ServerTest extends TestCase
 
     public function testWokerStart()
     {
-        self::$server->on('init', function ($server) {
-            $this->assertInstanceOf(Server::class, $server);
+        self::$server->on('init', function (Event\Init $init) {
+            $this->assertInstanceOf(Server::class, $init->getServer());
         });
 
         $this->assertEquals(null, self::$server->workerStart($this->swoole, 1));
@@ -108,11 +117,12 @@ class ServerTest extends TestCase
 
     public function testRequest()
     {
-        self::$server->on('workflow', function ($request) {
-            $this->assertEquals($this->req, $request);
+        self::$server->on('workflow', function (Event\Workflow $event) {
+            $this->assertEquals($this->req, $event->getRequest());
             return array();
         });
-        self::$server->on('monitor', function ($data) {
+        self::$server->on('monitor', function (Event\Monitor $event) {
+            $data = $event->getData();
             $this->assertTrue(is_array($data));
             $this->assertEquals('/kovey/test/kovey/framework', $data['path']);
             $this->assertEquals('{"kovey":"framework","http":"server"}', $data['params']);

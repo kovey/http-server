@@ -12,7 +12,7 @@
 namespace Kovey\Web\App\Http\Pipeline;
 
 use PHPUnit\Framework\TestCase;
-use Kovey\Library\Container\Container;
+use Kovey\Container\Container;
 use Kovey\Library\Util\Json;
 use Swoole\Http\Request as SHR;
 use Kovey\Web\App\Http\Request\RequestInterface;
@@ -59,7 +59,7 @@ class PipelineTest extends TestCase
         $response->setBody(Json::encode(array('kovey' => 'framework')));
         $pipeline = new Pipeline(new Container());
         $pipeline->via('handle')
-                 ->send(new Request($this->req), $response)
+                 ->send(new Request($this->req), $response, hash('sha256', '123456'))
                  ->through(array())
                  ->then(function (RequestInterface $req, ResponseInterface $res) {
                      $this->assertEquals('/kovey/test/kovey/framework', $req->getUri());

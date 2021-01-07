@@ -59,13 +59,14 @@ class ValidatorTest extends TestCase
             'http' => array('required', 'minlength' => 1, 'maxlength' => 20),
             'text' => array('required', 'minlength' => 1, 'maxlength' => 128),
         ));
-        $this->assertTrue($validator->handle(new Request($this->req), new Response(), function ($request, $response) {
+        $this->assertTrue($validator->handle(new Request($this->req), new Response(), function (Request $request, Response $response, string $traceId) {
             return true;
-        }));
+        }, md5('aaa')));
     }
 
     public function testValidatorFailure()
     {
+        $traceId = md5('aaaa');
         $validator = new Validator();
         $validator->setRules(array(
             'kovey' => array('required', 'minlength' => 1, 'maxlength' => 20),
@@ -73,9 +74,9 @@ class ValidatorTest extends TestCase
             'text' => array('required', 'minlength' => 1, 'maxlength' => 20),
         ));
 
-        $result = $validator->handle(new Request($this->req), new Response(), function ($request, $response) {
+        $result = $validator->handle(new Request($this->req), new Response(), function (Request $request, Response $response, string $traceId) {
             return true;
-        });
+        }, $traceId);
         $this->assertInstanceOf(ResponseInterface::class, $result);
         $this->assertEquals("HTTP/1.1 200 OK\r\nServer: kovey framework\r\nConnection: keep-alive\r\nContent-Type: text/html; charset=utf-8\r\n" . 
             "content-type: application/json\r\nContent-Length: 166\r\n\r\n", $result->getHeader());
