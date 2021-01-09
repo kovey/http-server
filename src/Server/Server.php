@@ -265,7 +265,7 @@ class Server
 
     public function workerError(\Swoole\Http\Server $serv, \Swoole\Server\StatusInfo $info)
     {
-        //Logger::writeErrorLog(__LINE__, __FILE__, $info);
+        Logger::writeWarningLogSync(__LINE__, __FILE__, json_encode($info));
     }
 
     /**
