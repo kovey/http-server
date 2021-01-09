@@ -112,15 +112,16 @@ class Router implements RouterInterface
                 return;
             }
 
-            $this->uri = '/' . $info[1] . '/' . $info[0];
+            $this->controller = $info[1];
+            $this->action = $info[0];
+        } else {
+            $this->parseRoute();
+            if (!$this->isValid) {
+                return;
+            }
         }
 
         $this->callable = null;
-
-        $this->parseRoute();
-        if (!$this->isValid) {
-            return;
-        }
 
         $this->className = trim(str_replace('/', '\\', $this->classPath) . '\\' . ucfirst($this->controller) . 'Controller', '\\');
         $this->viewPath = strtolower($this->classPath) . '/' . strtolower($this->controller) . '/' . strtolower($this->action);

@@ -175,7 +175,7 @@ class Bootstrap
     {
         $app->getContainer()
             ->on('Router', function (Event\Router $event) use ($app) {
-                $router = new Router($event->getPath());
+                $router = new Router($event->getPath(), $event->getRouter());
                 if (!$router->isValid()) {
                     return;
                 }
