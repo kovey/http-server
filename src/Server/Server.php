@@ -142,18 +142,25 @@ class Server
             mkdir($logDir, 0777, true);
         }
 
+        $document = APPLICATION_PATH . $this->config['document_root'];
+        if (!is_dir($document)) {
+            $document = '';
+        }
+
         $this->serv->set(array(
             'daemonize' => !$this->isRunDocker,
             'http_compression' => true,
             'enable_static_handler' => true,
-            'document_root' => APPLICATION_PATH . $this->config['document_root'],
+            'document_root' => $document,
             'pid_file' => $this->config['pid_file'] ?? '/var/run/kovey.pid',
             'log_file' => $this->config['log_file'],
             'worker_num' => $this->config['worker_num'],
             'enable_coroutine' => true,
             'max_coroutine' => $this->config['max_co'],
             'package_max_length' => $this->getBytes($this->config['package_max_length']),
-            'event_object' => true
+            'event_object' => true,
+            'log_rotation' => SWOOLE_LOG_ROTATION_DAILY,
+            'log_date_format' => '%Y-%m-%d %H:%M:%S'
         ));
 
         $this->scanStaticDir();
