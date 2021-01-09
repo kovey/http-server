@@ -191,6 +191,6 @@ class Bootstrap
                     $app->registerDelRouter($event->getPath(), $router);
                 }
             })
-            ->parse(APPLICATION_PATH . '/' . $app->getConfig()['controllers'], '');
+            ->parse(APPLICATION_PATH . '/' . $app->getConfig()['controllers'], '', 'Controller');
     }
 }

@@ -476,7 +476,7 @@ class Server
      *
      * @return null
      */
-    public function close($server, int $fd, int $reactorId)
+    public function close(\Swoole\Http\Server $server, \Swoole\Server\Event $event)
     {}
 
     /**
