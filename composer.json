@@ -18,10 +18,10 @@
         }
     ],
     "require": {
-        "php": ">=8.0",
-        "ext-swoole": ">=4.6.0",
+        "php": "^8.0",
+        "ext-swoole": "^4.6.0",
         "ext-json": ">=1.7",
-        "kovey/library": "^1.1",
+        "kovey/library": "^2.0",
         "kovey/connection": "^1.0",
         "kovey/logger": "^1.0",
         "kovey/container": "^1.0"
