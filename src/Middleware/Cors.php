@@ -11,25 +11,23 @@
  */
 namespace Kovey\Web\Middleware;
 
-use Kovey\Web\App\Http\Request\RequestInterface;
-use Kovey\Web\App\Http\Response\ResponseInterface;
+use Kovey\Event\EventInterface;
+use Kovey\Pipeline\Middleware\MiddlewareInterface;
 
 class Cors implements MiddlewareInterface
 {
     /**
      * @description handle
      *
-     * @param RequestInterface $req
+     * @param EventInterface $event
      *
-     * @param ResponseInterface $res
-     *
-     * @param callable $next
+     * @param callable | Array $next
      *
      * @return mixed
      */
-    public function handle(RequestInterface $req, ResponseInterface $res, callable $next, string $traceId)
+    public function handle(EventInterface $event, callable | Array $next)
     {
-        $req->processCors();
-        return $next($req, $res, $traceId);
+        $event->getRequest()->processCors();
+        return $next($event);
     }
 }

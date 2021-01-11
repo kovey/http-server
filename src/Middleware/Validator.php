@@ -11,10 +11,9 @@
  */
 namespace Kovey\Web\Middleware;
 
-use Kovey\Web\App\Http\Request\RequestInterface;
-use Kovey\Web\App\Http\Response\ResponseInterface;
-use Kovey\Library\Util\Validator as Valid;
-use Kovey\Library\Util\Json;
+use Kovey\Event\EventInterface;
+use Kovey\Pipeline\Middleware\MiddlewareInterface;
+use Kovey\Validator\Validator as Valid;
 
 class Validator implements MiddlewareInterface
 {
@@ -41,47 +40,51 @@ class Validator implements MiddlewareInterface
     /**
      * @description 中间件的具体实现
      *
-     * @param RequestInterface $req
+     * @param EventInterface $event
      *
-     * @param ResponseInterface $res
+     * @param callable | Array $next
      *
-     * @param callable $next
+     * return void
      */
-    public function handle(RequestInterface $req, ResponseInterface $res, callable $next, string $traceId)
+    public function handle(EventInterface $event, callable | Array $next)
     {
         if (empty($this->rules)) {
-            return $next($req, $res, $traceId);
+            return $next($event);
         }
 
         $data = null;
-        switch (strtolower($req->getMethod())) {
+        switch (strtolower($event->getRequest()->getMethod())) {
             case 'get':
-                $data = $req->getQuery();
+                $data = $event->getRequest()->getQuery();
                 break;
             case 'post':
-                $data = $req->getPost();
+                $data = $event->getRequest()->getPost();
                 break;
             case 'put':
-                $data = $req->getPut();
+                $data = $event->getRequest()->getPut();
                 break;
             case 'delete':
-                $data = $req->getDelete();
+                $data = $event->getRequest()->getDelete();
                 break;
             default:
                 $data = array();
         }
 
-        $valid = new Valid($data, $this->rules);
-        if (!$valid->run()) {
+        $valid = new Valid($data);
+        foreach ($this->rules as $rule) {
+            $valid->addRule($rule);
+        }
+
+        if (!$valid->valid()) {
             $res->status(200);
             $res->setHeader('content-type', 'application/json');
             $res->setBody(Json::encode(array(
                 'code' => 1000,
                 'msg' => $valid->getError()
             )));
-            return $res;
+            return $event->getResponse();
         }
 
-        return $next($req, $res, $traceId);
+        return $next($event);
     }
 }

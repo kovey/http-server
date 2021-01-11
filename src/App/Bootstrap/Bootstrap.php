@@ -24,13 +24,14 @@ use Kovey\Web\App\Http\Response\ResponseInterface;
 use Kovey\Container\Container;
 use Kovey\Container\Event;
 use Kovey\Web\Middleware\SessionStart;
+use Kovey\Web\Middleware\Validator;
 use Kovey\Web\App\Http\Router\Routers;
 use Kovey\Web\App\Http\Router\Router;
 use Kovey\Web\App\Http\Router\Route;
 use Kovey\Web\App\Http\Router\RouterInterface;
 use Kovey\Web\App\Mvc\View\Sample;
 use Kovey\Web\App\Mvc\Controller\ControllerInterface;
-use Kovey\Web\App\Http\Pipeline\Pipeline;
+use Kovey\Pipeline\Pipeline;
 use Kovey\Logger\Logger;
 use Kovey\Logger\Db;
 use Kovey\Logger\Monitor;
@@ -102,10 +103,10 @@ class Bootstrap
             ->on('pipeline', function (WE\Pipeline $event) use($app) {
                 return (new Pipeline($app->getContainer()))
                     ->via('handle')
-                    ->send($event->getRequest(), $event->getResponse(), $event->getTraceId())
+                    ->send($event)
                     ->through(array_merge($app->getDefaultMiddlewares(), $event->getRouter()->getMiddlewares()))
-                    ->then(function (RequestInterface $req, ResponseInterface $res, $traceId) use ($event, $app) {
-                        return $app->runAction($req, $res, $event->getRouter(), $traceId);
+                    ->then(function (WE\Pipeline $event) use ($app) {
+                        return $app->runAction($event->getRequest(), $event->getResponse(), $event->getRouter(), $event->getTraceId());
                     });
             });
     }
@@ -180,6 +181,8 @@ class Bootstrap
                     return;
                 }
 
+                $validator = new Validator();
+                $router->addMiddleware($validator->setRules($event->getRules()));
                 $method = strtolower($event->getMethod());
                 if ($method === 'post') {
                     $app->registerPostRouter($event->getPath(), $router);
