@@ -11,7 +11,7 @@
  */
 namespace Kovey\Web\App\Http\Router;
 
-use Kovey\Web\Middleware\MiddlewareInterface;
+use Kovey\Pipeline\Middleware\MiddlewareInterface;
 
 interface RouterInterface
 {
