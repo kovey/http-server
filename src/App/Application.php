@@ -21,7 +21,7 @@ use Kovey\Web\App\Mvc\Controller\ControllerInterface;
 use Kovey\Web\App\Mvc\View\ViewInterface;
 use Kovey\Library\Process\ProcessAbstract;
 use Kovey\Container\ContainerInterface;
-use Kovey\Web\Middleware\MiddlewareInterface;
+use Kovey\Pipeline\Middleware\MiddlewareInterface;
 use Kovey\Web\App\Bootstrap\Autoload;
 use Kovey\Web\Server\Server;
 use Kovey\Library\Process\UserProcess;
