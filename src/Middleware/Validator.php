@@ -14,6 +14,7 @@ namespace Kovey\Web\Middleware;
 use Kovey\Event\EventInterface;
 use Kovey\Pipeline\Middleware\MiddlewareInterface;
 use Kovey\Validator\Validator as Valid;
+use Kovey\Library\Util\Json;
 
 class Validator implements MiddlewareInterface
 {
@@ -76,9 +77,9 @@ class Validator implements MiddlewareInterface
         }
 
         if (!$valid->valid()) {
-            $res->status(200);
-            $res->setHeader('content-type', 'application/json');
-            $res->setBody(Json::encode(array(
+            $event->getResponse()->status(200);
+            $event->getResponse()->setHeader('content-type', 'application/json');
+            $event->getResponse()->setBody(Json::encode(array(
                 'code' => 1000,
                 'msg' => $valid->getError()
             )));
