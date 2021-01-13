@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5bc52a306620283e4a24ae7f9738e5d3",
+    "content-hash": "cb355be221c1dc116d306b609ce0c84a",
     "packages": [
         {
             "name": "kovey/connection",
-            "version": "v1.0.3",
+            "version": "v1.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/kovey/connection.git",
-                "reference": "c17cebd4fe4fa6590d98bb9397a43c270ace9820"
+                "reference": "4d42304985781d14cca4e862fe8bf639f0cf55c0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/kovey/connection/zipball/c17cebd4fe4fa6590d98bb9397a43c270ace9820",
-                "reference": "c17cebd4fe4fa6590d98bb9397a43c270ace9820",
+                "url": "https://api.github.com/repos/kovey/connection/zipball/4d42304985781d14cca4e862fe8bf639f0cf55c0",
+                "reference": "4d42304985781d14cca4e862fe8bf639f0cf55c0",
                 "shasum": "",
                 "mirrors": [
                     {
@@ -27,9 +27,9 @@
                 ]
             },
             "require": {
-                "kovey/db": "^1.0",
+                "kovey/db": "^1.1",
                 "kovey/redis": "^1.0",
-                "php": ">=8.0"
+                "php": "^8.0"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3"
@@ -59,7 +59,7 @@
                 "php",
                 "pool"
             ],
-            "time": "2020-11-22T04:03:47+00:00"
+            "time": "2021-01-13T05:59:58+00:00"
         },
         {
             "name": "kovey/container",
