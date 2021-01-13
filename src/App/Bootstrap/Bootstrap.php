@@ -51,7 +51,7 @@ class Bootstrap
         ko_change_process_name(Manager::get('server.server.name') . ' root');
         Logger::setLogPath(Manager::get('server.server.logger_dir'));
         Logger::setCategory(Manager::get('server.server.name'));
-        Monitor::setLogDir(Manager::get('server.error.ogger_dir'));
+        Monitor::setLogDir(Manager::get('server.server.logger_dir'));
         Db::setLogDir(Manager::get('server.server.logger_dir'));
 
         if (Manager::get('server.session.open') === 'On' && Manager::get('server.session.type') === 'file') {
