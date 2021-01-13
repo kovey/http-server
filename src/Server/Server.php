@@ -132,14 +132,13 @@ class Server
      */
     private function init() : Server
     {
-        $logDir = dirname($this->config['log_file']);
+        $logDir = dirname($this->config['pid_file']);
         if (!is_dir($logDir)) {
             mkdir($logDir, 0777, true);
         }
 
-        $logDir = dirname($this->config['pid_file']);
-        if (!is_dir($logDir)) {
-            mkdir($logDir, 0777, true);
+        if (!is_dir($this->config['logger_dir'] . '/server')) {
+            mkdir($this->config['logger_dir'] . '/server');
         }
 
         $document = APPLICATION_PATH . $this->config['document_root'];
@@ -153,7 +152,7 @@ class Server
             'enable_static_handler' => true,
             'document_root' => $document,
             'pid_file' => $this->config['pid_file'] ?? '/var/run/kovey.pid',
-            'log_file' => $this->config['log_file'],
+            'log_file' => $this->config['logger_dir'] . '/server/server.log',
             'worker_num' => $this->config['worker_num'],
             'enable_coroutine' => true,
             'max_coroutine' => $this->config['max_co'],
