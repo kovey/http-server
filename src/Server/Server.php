@@ -369,7 +369,11 @@ class Server
             $response->header('Set-Cookie', $cookie);
         }
 
-        $body = $result['content'] ?? ErrorTemplate::getContent($httpCode);
+        $body = $result['content'] ?? '';
+        if ($httpCode >= ErrorTemplate::HTTP_CODE_400) {
+            $body = ErrorTemplate::getContent($httpCode);
+        }
+
         $response->end($body);
         if (!isset($this->config['monitor_open']) || $this->config['monitor_open'] !== 'Off') {
             $this->monitor(
