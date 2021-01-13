@@ -11,12 +11,12 @@
  */
 namespace Kovey\Web\App\Bootstrap;
 
-use Kovey\Library\Process;
+use Kovey\Process\Process;
 use Kovey\Web\Process\ClearSession;
 use Kovey\Library\Config\Manager;
 use Kovey\Web\App\Application;
 use Kovey\Web\Server\Server;
-use Kovey\Library\Process\UserProcess;
+use Kovey\Process\UserProcess;
 use Kovey\Web\App\Http\Request\Request;
 use Kovey\Web\App\Http\Request\RequestInterface;
 use Kovey\Web\App\Http\Response\Response;

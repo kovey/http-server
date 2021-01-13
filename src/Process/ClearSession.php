@@ -13,7 +13,7 @@ namespace Kovey\Web\Process;
 
 use Kovey\Logger\Logger;
 use Kovey\Library\Config\Manager;
-use Kovey\Library\Process\ProcessAbstract;
+use Kovey\Process\ProcessAbstract;
 use Swoole\Timer;
 
 class ClearSession extends ProcessAbstract
