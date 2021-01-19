@@ -15,6 +15,7 @@ use Kovey\Event\EventInterface;
 use Kovey\Pipeline\Middleware\MiddlewareInterface;
 use Kovey\Validator\Validator as Valid;
 use Kovey\Library\Util\Json;
+use Kovey\Web\Server\ErrorTemplate;
 
 class Validator implements MiddlewareInterface
 {
@@ -53,39 +54,30 @@ class Validator implements MiddlewareInterface
             return $next($event);
         }
 
-        $data = null;
-        switch (strtolower($event->getRequest()->getMethod())) {
-            case 'get':
-                $data = $event->getRequest()->getQuery();
-                break;
-            case 'post':
-                $data = $event->getRequest()->getPost();
-                break;
-            case 'put':
-                $data = $event->getRequest()->getPut();
-                break;
-            case 'delete':
-                $data = $event->getRequest()->getDelete();
-                break;
-            default:
-                $data = array();
-        }
+        $data = match (strtolower($event->getRequest()->getMethod())) {
+            'get' => $event->getRequest()->getQuery(),
+            'post' => $event->getRequest()->getPost(),
+            'put' => $event->getRequest()->getPut(),
+            'delete' => $event->getRequest()->getDelete(),
+            default => $data = array()
+        };
 
         $valid = new Valid($data);
         foreach ($this->rules as $rule) {
             $valid->addRule($rule);
         }
 
-        if (!$valid->valid()) {
-            $event->getResponse()->status(200);
-            $event->getResponse()->setHeader('content-type', 'application/json');
-            $event->getResponse()->setBody(Json::encode(array(
-                'code' => 1000,
-                'msg' => $valid->getError()
-            )));
-            return $event->getResponse();
+        if ($valid->valid()) {
+            return $next($event);
         }
 
-        return $next($event);
+        $event->getResponse()->status(ErrorTemplate::HTTP_CODE_200);
+        $event->getResponse()->setHeader('content-type', 'application/json');
+        $event->getResponse()->setBody(Json::encode(array(
+            'code' => 1000,
+            'msg' => $valid->getError(),
+            'data' => array()
+        )));
+        return $event->getResponse();
     }
 }
