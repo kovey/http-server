@@ -217,9 +217,9 @@ class Routers implements RoutersInterface
     /**
      * @description 禁用默认路由
      *
-     * @return null
+     * @return void
      */
-    public function disableDefault()
+    public function disableDefault() : void
     {
         $this->isDisableDefault = true;
     }

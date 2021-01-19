@@ -40,13 +40,13 @@ use Kovey\Web\Event as WE;
 class Bootstrap
 {
     /**
-     * @description 初始化日志目录
+     * @description init logger
      *
      * @param Application $app
      *
-     * @return null
+     * @return void
      */
-    public function __initLogger(Application $app)
+    public function __initLogger(Application $app) : void
     {
         ko_change_process_name(Manager::get('server.server.name') . ' root');
         Logger::setLogPath(Manager::get('server.server.logger_dir'));
@@ -62,13 +62,13 @@ class Bootstrap
     }
 
     /**
-     * @description 初始化APP
+     * @description init $app
      *
      * @param Application $app
      *
-     * @return null
+     * @return void
      */
-    public function __initApp(Application $app)
+    public function __initApp(Application $app) : void
     {
         $app->registerServer(new Server(Manager::get('server.server')))
             ->registerContainer(new Container())
@@ -80,13 +80,13 @@ class Bootstrap
     }
 
     /**
-     * @description 初始化事件
+     * @description init event
      *
      * @param Application $app
      *
-     * @return null
+     * @return void
      */
-    public function __initEvents(Application $app)
+    public function __initEvents(Application $app) : void
     {
         $app->on('request', function (WE\Request $event) {
                 return new Request($event->getRequest());
@@ -109,13 +109,13 @@ class Bootstrap
     }
 
     /**
-     * @description 初始化进程
+     * @description init process
      *
      * @param Application $app
      *
-     * @return null
+     * @return void
      */
-    public function __initProcess(Application $app)
+    public function __initProcess(Application $app) : void
     {
         $app->registerProcess('kovey_config', (new Process\Config())->setProcessName(Manager::get('server.server.name') . ' config'));
         if (Manager::get('server.session.open') === 'On' && Manager::get('server.session.type') === 'file') {
@@ -124,18 +124,18 @@ class Bootstrap
     }
 
     /**
-     * @description 初始化弟自定义的Bootstrap
+     * @description init custom bootstrap
      *
      * @param Application $app
      *
-     * @return null
+     * @return void
      */
-    public function __initCustomBoot(Application $app)
+    public function __initCustomBoot(Application $app) : void
     {
         $bootstrap = $app->getConfig()['boot'] ?? 'application/Bootstrap.php';
         $file = APPLICATION_PATH . '/' . $bootstrap;
         if (!is_file($file)) {
-            return $this;
+            return;
         }
 
         require_once $file;
@@ -144,13 +144,13 @@ class Bootstrap
     }
 
     /**
-     * @description 初始化路由
+     * @description init router
      *
      * @param Application $app
      *
-     * @return null
+     * @return void
      */
-    public function __initRouters(Application $app)
+    public function __initRouters(Application $app) : void
     {
         $path = APPLICATION_PATH . '/' . $app->getConfig()['routers'];
         if (!is_dir($path)) {
@@ -169,7 +169,14 @@ class Bootstrap
         }
     }
 
-    public function __initParseInject(Application $app)
+    /**
+     * @description init parse inject
+     *
+     * @param Application $app
+     *
+     * @return void
+     */
+    public function __initParseInject(Application $app) : void
     {
         $app->getContainer()
             ->on('Router', function (Event\Router $event) use ($app) {
@@ -178,8 +185,11 @@ class Bootstrap
                     return;
                 }
 
-                $validator = new Validator();
-                $router->addMiddleware($validator->setRules($event->getRules()));
+                if (!empty($event->getRules())) {
+                    $validator = new Validator();
+                    $router->addMiddleware($validator->setRules($event->getRules()));
+                }
+
                 $method = strtolower($event->getMethod());
                 if ($method === 'post') {
                     $app->registerPostRouter($event->getPath(), $router);

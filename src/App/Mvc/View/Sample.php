@@ -1,7 +1,7 @@
 <?php
 /**
  *
- * @description 简单的视图类
+ * @description sample view
  *
  * @package     App\Mvc
  *
@@ -17,28 +17,28 @@ use Kovey\Web\App\Mvc\View\ViewInterface;
 class Sample implements ViewInterface
 {
     /**
-     * @description 模板路径
+     * @description template path
      *
      * @var string
      */
     private string $template;
 
     /**
-     * @description 响应对象
+     * @description response
      *
      * @var ResponseInterface
      */
     private ResponseInterface $res;
 
     /**
-     * @description 页面数据
+     * @description view data
      *
      * @var Array
      */
     private Array $data;
 
     /**
-     * @description 构造
+     * @description construct
      *
      * @param ResponseInterface $res
      *
@@ -54,49 +54,49 @@ class Sample implements ViewInterface
     }
 
     /**
-     * @description 设置模板
+     * @description set template
      *
      * @param string $template
      *
-     * @return null
+     * @return ViewInterface
      */
-    public function setTemplate(string $template)
+    public function setTemplate(string $template) : ViewInterface
     {
         $this->template = $template;
     }
 
     /**
-     * @description 设置变量值
+     * @description set veriable
      *
      * @param string $name
      *
      * @param mixed $val
      *
-     * @return null
+     * @return void
      */
-    public function __set(string $name, $val)
+    public function __set(string $name, mixed $val) : void
     {
         $this->data[$name] = $val;
     }
 
     /**
-     * @description 获取变量值
+     * @description get veriable
      *
      * @param string $name
      *
      * @return mixed
      */
-    public function __get(string $name)
+    public function __get(string $name) : mixed
     {
         return $this->data[$name] ?? null;
     }
 
     /**
-     * @description 页面渲染
+     * @description render view
      *
-     * @return null
+     * @return ViewInterface
      */
-    public function render()
+    public function render() : ViewInterface
     {
         ob_start();
         ob_implicit_flush(0);
@@ -104,10 +104,11 @@ class Sample implements ViewInterface
         require($this->template);
         $content = ob_get_clean();
         $this->res->setBody($content);
+        return $this;
     }
 
     /**
-     * @description 获取响应对象
+     * @description get response
      *
      * @return ResponseInterface
      */

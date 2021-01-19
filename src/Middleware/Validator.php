@@ -45,9 +45,9 @@ class Validator implements MiddlewareInterface
      *
      * @param callable | Array $next
      *
-     * return void
+     * @return mixed
      */
-    public function handle(EventInterface $event, callable | Array $next)
+    public function handle(EventInterface $event, callable | Array $next) : mixed
     {
         if (empty($this->rules)) {
             return $next($event);

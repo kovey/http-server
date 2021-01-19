@@ -1,7 +1,7 @@
 <?php
 /**
  *
- * @description 清理session
+ * @description session clean
  *
  * @package     Web\Process
  *
@@ -19,21 +19,21 @@ use Swoole\Timer;
 class ClearSession extends ProcessAbstract
 {
     /**
-     * @description 初始化
+     * @description init
      *
      * @return null
      */
-    protected function init()
+    protected function init() : void
     {
         $this->processName = Manager::get('server.server.name') . ' core clear session';
     }
 
     /**
-     * @description 业务处理
+     * @description business process
      *
-     * @return null
+     * @return void
      */
-    protected function busi()
+    protected function busi() : void
     {
         $this->listen(function ($pipe) {
             $result = $this->read();

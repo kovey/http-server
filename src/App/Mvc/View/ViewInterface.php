@@ -15,7 +15,7 @@ use Kovey\Web\App\Http\Response\ResponseInterface;
 interface ViewInterface
 {
     /**
-     * @description 构造
+     * @description constructor
      *
      * @param ResponseInterface $res
      *
@@ -26,23 +26,23 @@ interface ViewInterface
     public function __construct(ResponseInterface $res, string $template);
 
     /**
-     * @description 设置模板
+     * @description set template
      *
      * @param string $template
      *
-     * @return null
+     * @return ViewInterface
      */
-    public function setTemplate(string $template);
+    public function setTemplate(string $template) : ViewInterface;
 
     /**
-     * @description 页面渲染
+     * @description render view
      *
-     * @return null
+     * @return ViewInterface
      */
-    public function render();
+    public function render() : ViewInterface;
 
     /**
-     * @description 获取响应对象
+     * @description get response
      *
      * @return ResponseInterface
      */

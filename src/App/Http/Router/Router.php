@@ -132,9 +132,9 @@ class Router implements RouterInterface
     /**
      * @description 路由解析
      *
-     * @return null
+     * @return void
      */
-    private function parseRoute()
+    private function parseRoute() : void
     {
         if ($this->uri === '/') {
             $this->controller = 'index';

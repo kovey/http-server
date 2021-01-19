@@ -1,7 +1,7 @@
 <?php
 /**
  *
- * @description HTTP请求的封装
+ * @description Request
  *
  * @package     App\Http\Request
  *
@@ -17,49 +17,21 @@ use Kovey\Web\App\Http\Session\SessionInterface;
 class Request implements RequestInterface
 {
     /**
-     * @description 请求时间
-     *
-     * @var int
-     */
-    private int $time;
-
-    /**
-     * @description 请求IP
-     *
-     * @var string
-     */
-    private string $remote_ip;
-
-    /**
-     * @description 远程信息
-     *
-     * @var Array
-     */
-    private Array $remote;
-
-    /**
-     * @description 原始请求对象
+     * @description request object
      *
      * @var Swoole\Http\Request
      */
     private \Swoole\Http\Request $req;
 
     /**
-     * @description 请求BODY
-     *
-     * @var string
-     */
-    private string $body;
-
-    /**
-     * @description 服务器信息
+     * @description server info
      *
      * @var Array
      */
     private Array $server;
 
     /**
-     * @description 控制器
+     * @description controller
      *
      * @var string
      */
@@ -73,49 +45,49 @@ class Request implements RequestInterface
     private string $action;
 
     /**
-     * @description 请求参数
+     * @description request params
      *
      * @var Array
      */
     private Array $params;
 
     /**
-     * @description post请求参数
+     * @description post params
      *
      * @var Array
      */
     private Array $post = array();
 
     /**
-     * @description GET请求参数
+     * @description get params
      *
      * @var Array
      */
     private Array $get = array();
 
     /**
-     * @description PUT请求参数
+     * @description put params
      *
      * @var Array
      */
     private Array $put = array();
 
     /**
-     * @description DELETE 请求参数
+     * @description delete params
      *
      * @var Array
      */
     private Array $delete = array();
 
     /**
-     * @description 绘画
+     * @description session
      *
      * @var SessionInterface
      */
     private SessionInterface $session;
 
     /**
-     * @description 构造函数
+     * @description construct
      *
      * @param Swoole\Http\Request $request
      * 
@@ -134,9 +106,9 @@ class Request implements RequestInterface
     /**
      * @description 构造函数
      * 
-     * @return null
+     * @return void
      */
-    private function processParams()
+    private function processParams() : void
     {
         $info = explode('/', $this->getUri());
         $len = count($info);
@@ -151,11 +123,11 @@ class Request implements RequestInterface
     }
 
     /**
-     * @description 解析数据
+     * @description data parse
      * 
-     * @return null
+     * @return void
      */
-    private function parseData()
+    private function parseData() : void
     {
         $cType = explode(';', $this->req->header['content-type'] ?? '')[0];
         $method = $this->getMethod();
@@ -201,11 +173,11 @@ class Request implements RequestInterface
     }
 
     /**
-     * @description 设置全局参数
+     * @description set global
      * 
-     * @return null
+     * @return void
      */
-    private function setGlobal()
+    private function setGlobal() : void
     {
         foreach ($this->req->header as $key => $value) {
             $key = 'HTTP_' . strtoupper(str_replace('-', '_', $key));
@@ -214,7 +186,7 @@ class Request implements RequestInterface
     }
 
     /**
-     * @description 判断是否是WEBSocket
+     * @description is websocket
      *
      * @return bool
      */
@@ -224,7 +196,7 @@ class Request implements RequestInterface
     }
 
     /**
-     * @description 获取客户端IP
+     * @description get client ip
      *
      * @return string
      */
@@ -251,7 +223,7 @@ class Request implements RequestInterface
     }
 
     /**
-     * @description 获取浏览器信息
+     * @description get brower
      *
      * @return string
      */
@@ -295,13 +267,17 @@ class Request implements RequestInterface
     }
     
     /**
-     * @description 获取客户端系统信息
+     * @description get client os
      *
      * @return string
      */
     public function getOS() : string
     {
-        $agent = $this->server['HTTP_USER_AGENT'];
+        $agent = $this->server['HTTP_USER_AGENT'] ?? '';
+        if (empty($agent)) {
+            return '';
+        }
+
         if (preg_match('/win/i', $agent) && strpos($agent, '95')) {
             $os = 'Windows 95';
         } else if (preg_match('/win 9x/i', $agent) && strpos($agent, '4.90')) {
@@ -368,15 +344,15 @@ class Request implements RequestInterface
     }
 
     /**
-     * @description 获取POST请求数据
+     * @description get post data
      *
      * @param string $name
      *
      * @param mixed $default
      *
-     * @return string | Array
+     * @return mixed
      */
-    public function getPost(string $name = '', $default = '') : string | Array
+    public function getPost(string $name = '', $default = '') : mixed
     {
         if (empty($name)) {
             return $this->post;
@@ -386,15 +362,15 @@ class Request implements RequestInterface
     }
 
     /**
-     * @description 获取GET请求数据
+     * @description get query data
      *
      * @param string $name
      *
      * @param string $default
      *
-     * @return string | Array
+     * @return mixed
      */
-    public function getQuery(string $name = '', $default = '') : string | Array
+    public function getQuery(string $name = '', $default = '') : mixed
     {
         if (empty($name)) {
             return $this->get;
@@ -404,15 +380,15 @@ class Request implements RequestInterface
     }
 
     /**
-     * @description 获取PUT请求数据
+     * @description get put data
      *
      * @param string $name
      *
      * @param string $default
      *
-     * @return string | Array
+     * @return mixed
      */
-    public function getPut(string $name = '', $default = '') : string | Array
+    public function getPut(string $name = '', $default = '') : mixed
     {
         if (empty($name)) {
             return $this->put;
@@ -422,15 +398,15 @@ class Request implements RequestInterface
     }
 
     /**
-     * @description 获取DELETE请求数据
+     * @description get delete data
      *
      * @param string $name
      *
      * @param string $default
      *
-     * @return string | Array
+     * @return mixed
      */
-    public function getDelete(string $name = '', $default = '') : string | Array
+    public function getDelete(string $name = '', $default = '') : mixed
     {
         if (empty($name)) {
             return $this->delete;
@@ -440,7 +416,7 @@ class Request implements RequestInterface
     }
 
     /**
-     * @description 获取METHOD
+     * @description get request method
      *
      * @return string
      */
@@ -450,7 +426,7 @@ class Request implements RequestInterface
     }
 
     /**
-     * @description 获取URI
+     * @description get uri
      *
      * @return string
      */
@@ -460,7 +436,7 @@ class Request implements RequestInterface
     }
 
     /**
-     * @description 获取参数
+     * @description get param
      *
      * @param string $key
      *
@@ -472,7 +448,7 @@ class Request implements RequestInterface
     }
 
     /**
-     * @description 获取baseurl
+     * @description get base url
      *
      * @return string
      */
@@ -482,20 +458,20 @@ class Request implements RequestInterface
     }
 
     /**
-     * @description 设置控制器
+     * @description set controller
      *
      * @param string $controller
      * 
-     * @return Request
+     * @return RequestInterface
      */
-    public function setController($controller) : RequestInterface
+    public function setController(string $controller) : RequestInterface
     {
         $this->controller = $controller;
         return $this;
     }
 
     /**
-     * @description 设置Action
+     * @description set action
      *
      * @param string $action
      * 
@@ -508,7 +484,7 @@ class Request implements RequestInterface
     }
 
     /**
-     * @description 获取ACTION
+     * @description get action
      * 
      * @return string
      */
@@ -518,7 +494,7 @@ class Request implements RequestInterface
     }
 
     /**
-     * @description 获取控制器
+     * @description get controller
      * 
      * @return string
      */
@@ -528,7 +504,7 @@ class Request implements RequestInterface
     }
 
     /**
-     * @description 获取原始数据
+     * @description get php content
      * 
      * @return string
      */
@@ -538,7 +514,7 @@ class Request implements RequestInterface
     }
 
     /**
-     * @description 获取cookie
+     * @description get cookie
      * 
      * @return Array
      */
@@ -548,7 +524,7 @@ class Request implements RequestInterface
     }
 
     /**
-     * @description 获取头信息
+     * @description get header
      *
      * @param string $name
      * 
@@ -560,11 +536,11 @@ class Request implements RequestInterface
     }
 
     /**
-     * @description 设置Session
+     * @description set session
      *
      * @param SessionInterface $session
      * 
-     * @return null
+     * @return RequestInterface
      */
     public function setSession(SessionInterface $session) : RequestInterface
     {
@@ -573,7 +549,7 @@ class Request implements RequestInterface
     }
 
     /**
-     * @description 获取Sesstion
+     * @description get session
      * 
      * @return SessionInterface
      */

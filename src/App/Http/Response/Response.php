@@ -1,7 +1,7 @@
 <?php
 /**
  *
- * @description Response HTTP数据返回的封装
+ * @description Response
  *
  * @package     App\Http\Response
  *
@@ -49,7 +49,7 @@ class Response implements ResponseInterface
     private string $body = '';
 
     /**
-     * @description 构造
+     * @description construct
      *
      * @return Response
      */
@@ -63,26 +63,26 @@ class Response implements ResponseInterface
     }
 
     /**
-     * @description 设置状态码
+     * @description set status
      *
      * @param int $code
      *
-     * @return Response
+     * @return ResponseInterface
      */
-    public function status($code) : ResponseInterface
+    public function status(int $code) : ResponseInterface
     {
         $this->status = $code;
         return $this;
     }
 
     /**
-     * @description 跳转
+     * @description redirect
      *
      * @param string $url
      *
-     * @return Response
+     * @return ResponseInterface
      */
-    public function redirect($url) : ResponseInterface
+    public function redirect(string $url) : ResponseInterface
     {
         $this->status(302);
         $this->setHeader('Location', $url);
@@ -90,22 +90,22 @@ class Response implements ResponseInterface
     }
 
     /**
-     * @description 设置头信息
+     * @description set header
      *
      * @param string $key
      *
      * @param string $val
      *
-     * @return Response
+     * @return ResponseInterface
      */
-    public function setHeader($key, $value) : ResponseInterface
+    public function setHeader(string $key, string $value) : ResponseInterface
     {
         $this->head[$key] = $value;
         return $this;
     }
 
     /**
-     * @description 设置cookie
+     * @description set cookie
      *
      * @param string $name
      *
@@ -119,11 +119,13 @@ class Response implements ResponseInterface
      *
      * @param string $secure
      *
-     * @param bool $httponly
+     * @param string $httponly
      *
      * @return Response
      */
-    public function setCookie(string $name, ?string $value = null, ?string $expire = null, string $path = '/', ?string $domain = null, ?string $secure = null, ?string $httponly = null) : ResponseInterface
+    public function setCookie(
+        string $name, ?string $value = null, ?string $expire = null, string $path = '/', ?string $domain = null, ?string $secure = null, ?string $httponly = null
+    ) : ResponseInterface
     {
         if ($value == null) {
             $value = 'deleted';
@@ -150,7 +152,7 @@ class Response implements ResponseInterface
     }
 
     /**
-     * @description 添加头
+     * @description add headers
      *
      * @param Array $header
      *
@@ -163,7 +165,7 @@ class Response implements ResponseInterface
     }
 
     /**
-     * @description 获取头信息
+     * @description get header
      *
      * @param bool $fastcgi
      *
@@ -205,18 +207,18 @@ class Response implements ResponseInterface
     }
 
     /**
-     * @description 是否cache
+     * @description no cache
      *
-     * @return null
+     * @return void
      */
-    public function noCache()
+    public function noCache() : void
     {
         $this->head['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0';
         $this->head['Pragma'] = 'no-cache';
     }
 
     /**
-     * @description 获取BODY
+     * @description get body
      *
      * @return string
      */
@@ -226,7 +228,7 @@ class Response implements ResponseInterface
     }
 
     /**
-     * @description 获取HEAD
+     * @description get head
      *
      * @return Array
      */
@@ -236,7 +238,7 @@ class Response implements ResponseInterface
     }
 
     /**
-     * @description 获取COOKIE
+     * @description get cookie
      *
      * @return Array
      */
@@ -246,20 +248,20 @@ class Response implements ResponseInterface
     }
 
     /**
-     * @description 设置BODY
+     * @description set body
      *
      * @param string $body
      *
-     * @return null
+     * @return void
      */
-    public function setBody(string $body)
+    public function setBody(string $body) : void
     {
         $this->body = $body;
         $this->head['Content-Length'] = strlen($this->body);
     }
 
     /**
-     * @description 转换成数组
+     * @description to array
      *
      * @return Array
      */
@@ -274,18 +276,18 @@ class Response implements ResponseInterface
     }
 
     /**
-     * @description 清理BODY
+     * @description clear body
      *
-     * @return null
+     * @return void
      */
-    public function clearBody()
+    public function clearBody() : void
     {
         $this->body = '';
         $this->head['Content-Length'] = 0;
     }
 
     /**
-     * @description 获取状态码Y
+     * @description get http code
      *
      * @return int
      */

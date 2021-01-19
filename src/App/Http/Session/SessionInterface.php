@@ -22,7 +22,7 @@ interface SessionInterface
      *
      * @return null
      */
-    public function set(string $name, $val);
+    public function set(string $name, mixed $val) : void;
 
     /**
      * @description 获取值
@@ -31,7 +31,7 @@ interface SessionInterface
      *
      * @return mixed
      */
-    public function get(string $name);
+    public function get(string $name) : mixed;
 
     /**
      * @description 设置值
@@ -40,9 +40,9 @@ interface SessionInterface
      *
      * @param mixed $val
      *
-     * @return null
+     * @return void
      */
-    public function __set(string $name, $val);
+    public function __set(string $name, mixed $val) : void;
 
     /**
      * @description 获取值
@@ -51,7 +51,7 @@ interface SessionInterface
      *
      * @return mixed
      */
-    public function __get(string $name);
+    public function __get(string $name) : mixed;
 
     /**
      * @description 删除
@@ -72,7 +72,7 @@ interface SessionInterface
     /**
      * @description 清除
      *
-     * @return null
+     * @return void
      */
-    public function clear();
+    public function clear() : void;
 }

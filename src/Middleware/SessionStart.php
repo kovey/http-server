@@ -27,7 +27,7 @@ class SessionStart implements MiddlewareInterface
      *
      * @return mixed
      */
-    public function handle(EventInterface $event, callable | Array $next)
+    public function handle(EventInterface $event, callable | Array $next) : mixed
     {
         $cookie = $event->getRequest()->getCookie();
         $sessionId = $cookie['kovey_session_id'] ?? '';

@@ -56,11 +56,11 @@ class Autoload
     }
 
     /**
-     * @description 注册
+     * @description register
      *
-     * @return null
+     * @return void
      */
-    public function register()
+    public function register() : void
     {
         spl_autoload_register(array($this, 'autoloadController'));
         spl_autoload_register(array($this, 'autoloadPlugins'));
@@ -69,13 +69,13 @@ class Autoload
     }
 
     /**
-     * @description 注册控制器
+     * @description register controllers
      *
      * @param string $className
      *
-     * @return null
+     * @return void
      */
-    function autoloadController(string $className)
+    function autoloadController(string $className) : void
     {
         try {
             $className = str_replace('Controller', '', $className);
@@ -91,13 +91,13 @@ class Autoload
     }
 
     /**
-     * @description 注册插件
+     * @description register plugins
      * 
      * @param string
      *
-     * @return null
+     * @return void
      */
-    function autoloadPlugins(string $className)
+    function autoloadPlugins(string $className) : void
     {
         try {
             $className = $this->plugins . str_replace('\\', '/', $className) . '.php';
@@ -113,13 +113,13 @@ class Autoload
     }
 
     /**
-     * @description 注册库
+     * @description autoload user library
      *
      * @param string $className
      *
-     * @return null
+     * @return void
      */
-    function autoloadUserLib(string $className)
+    function autoloadUserLib(string $className) : void
     {
         try {
             $className = $this->library . str_replace('\\', '/', $className) . '.php';
@@ -135,13 +135,13 @@ class Autoload
     }
 
     /**
-     * @description 自定义目录
+     * @description autoload local path
      *
      * @param string $className
      *
-     * @return null
+     * @return void
      */
-    public function autoloadLocal(string $className)
+    public function autoloadLocal(string $className) : void
     {
         foreach ($this->customs as $path) {
             try {
@@ -159,13 +159,13 @@ class Autoload
     }
 
     /**
-     * @description 添加自定目录
+     * @description add local path
      *
      * @param string $path
      *
      * @return Autoload
      */
-    public function addLocalPath($path) : Autoload
+    public function addLocalPath(string $path) : Autoload
     {
         if (!is_dir($path)) {
             return $this;

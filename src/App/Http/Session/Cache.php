@@ -65,9 +65,9 @@ class Cache implements SessionInterface
     /**
      * @description 初始化
      *
-     * @return null
+     * @return void
      */
-    private function init()
+    private function init() : void
     {
         $redis = $this->pool->getConnection();
         if (!$redis) {
@@ -94,7 +94,7 @@ class Cache implements SessionInterface
      *
      * @return mixed
      */
-    public function get(string $name)
+    public function get(string $name) : mixed
     {
         return $this->content[$name] ?? null;
     }
@@ -108,7 +108,7 @@ class Cache implements SessionInterface
      *
      * @return null
      */
-    public function set(string $name, $val)
+    public function set(string $name, mixed $val) : void
     {
         $this->content[$name] = $val;
     }
@@ -116,9 +116,9 @@ class Cache implements SessionInterface
     /**
      * @description 保存到REDIS
      *
-     * @return null
+     * @return void
      */
-    private function saveToRedis()
+    private function saveToRedis() : void
     {
         go (function () {
             $redis = $this->pool->getConnection();
@@ -137,7 +137,7 @@ class Cache implements SessionInterface
      *
      * @return mixed
      */
-    public function __get(string $name)
+    public function __get(string $name) : mixed
     {
         return $this->get($name);
     }
@@ -149,9 +149,9 @@ class Cache implements SessionInterface
      *
      * @param mixed $val
      *
-     * @return null
+     * @return void
      */
-    public function __set(string $name, $val)
+    public function __set(string $name, mixed $val) : void
     {
         $this->set($name, $val);
     }
@@ -192,9 +192,9 @@ class Cache implements SessionInterface
     /**
      * @description 创建sessionID
      *
-     * @return null
+     * @return void
      */
-    private function newSessionId()
+    private function newSessionId() : void
     {
         $this->file = password_hash(uniqid('session', true) . random_int(1000000, 9999999), PASSWORD_DEFAULT);
     }
@@ -202,9 +202,9 @@ class Cache implements SessionInterface
     /**
      * @description 清除
      *
-     * @return null
+     * @return void
      */
-    public function clear()
+    public function clear() : void
     {
         $this->content = array();
     }

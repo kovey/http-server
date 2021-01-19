@@ -1,7 +1,7 @@
 <?php
 /**
  *
- * @description 响应接口
+ * @description response interface
  *
  * @package     Response
  *
@@ -14,25 +14,25 @@ namespace Kovey\Web\App\Http\Response;
 interface ResponseInterface
 {
     /**
-     * @description 设置状态码
+     * @description set status
      *
      * @param int $code
      *
      * @return ResponseInterface
      */
-    public function status($code) : ResponseInterface;
+    public function status(int $code) : ResponseInterface;
 
     /**
-     * @description 跳转
+     * @description redirect
      *
      * @param string $url
      *
      * @return ResponseInterface
      */
-    public function redirect($url) : ResponseInterface;
+    public function redirect(string $url) : ResponseInterface;
 
     /**
-     * @description 设置头信息
+     * @description set header
      *
      * @param string $key
      *
@@ -40,10 +40,10 @@ interface ResponseInterface
      *
      * @return ResponseInterface
      */
-    public function setHeader($key, $value) : ResponseInterface;
+    public function setHeader(string $key, string $value) : ResponseInterface;
 
     /**
-     * @description 设置cookie
+     * @description set cookie
      *
      * @param string $name
      *
@@ -61,10 +61,12 @@ interface ResponseInterface
      *
      * @return ResponseInterface
      */
-    public function setCookie(string $name, ?string $value = null, ?string $expire = null, string $path = '/', ?string $domain = null, ?string $secure = null, ?string $httponly = null) : ResponseInterface;
+    public function setCookie(
+        string $name, ?string $value = null, ?string $expire = null, string $path = '/', ?string $domain = null, ?string $secure = null, ?string $httponly = null
+    ) : ResponseInterface;
 
     /**
-     * @description 添加头
+     * @description add headers
      *
      * @param Array $header
      *
@@ -73,7 +75,7 @@ interface ResponseInterface
     public function addHeaders(array $header) : ResponseInterface;
 
     /**
-     * @description 获取头信息
+     * @description get header
      *
      * @param bool $fastcgi
      *
@@ -82,58 +84,58 @@ interface ResponseInterface
     public function getHeader(bool $fastcgi = false) : string;
 
     /**
-     * @description 是否cache
+     * @description no cache
      *
-     * @return null
+     * @return void
      */
-    public function noCache();
+    public function noCache() : void;
 
     /**
-     * @description 获取BODY
+     * @description get body
      *
      * @return string
      */
     public function getBody() : string;
 
     /**
-     * @description 获取HEAD
+     * @description get head
      *
      * @return Array
      */
     public function getHead() : Array;
 
     /**
-     * @description 获取COOKIE
+     * @description get cookie
      *
      * @return Array
      */
     public function getCookie() : Array;
 
     /**
-     * @description 设置BODY
+     * @description set body
      *
      * @param string $body
      *
-     * @return null
+     * @return void
      */
-    public function setBody(string $body);
+    public function setBody(string $body) : void;
 
     /**
-     * @description 转换成数组
+     * @description to array
      *
      * @return Array
      */
     public function toArray() : array;
 
     /**
-     * @description 清理BODY
+     * @description clear body
      *
-     * @return null
+     * @return void
      */
-    public function clearBody();
+    public function clearBody() : void;
 
     /**
-     * @description 获取状态码Y
+     * @description get status
      *
      * @return int
      */

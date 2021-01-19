@@ -37,86 +37,101 @@ use Kovey\Event\Listener\ListenerProvider;
 class Application implements AppInterface
 {
     /**
-     * @description 配置
+     * @description config
      *
      * @var Array
      */
     private Array $config;
 
     /**
-     * @description 服务器
+     * @description server
      *
      * @var Server
      */
     private Server $server;
 
     /**
-     * @description 路由
+     * @description routers
      *
      * @var RoutersInterface
      */
     private RoutersInterface $routers;
 
     /**
-     * @description 插件
+     * @description plugins
      *
      * @var Array
      */
     private Array $plugins;
 
     /**
-     * @description 自动加载
+     * @description autoload
      *
      * @var Autoload
      */
     private Autoload $autoload;
 
     /**
-     * @description 连接池
+     * @description pools
      *
      * @var Array
      */
     private Array $pools;
 
     /**
-     * @description 容器
+     * @description container
      *
      * @var ContainerInterface
      */
     private ContainerInterface $container;
 
     /**
-     * @description 默认中间件
+     * @description default middleware
      *
      * @var Array
      */
     private Array $defaultMiddlewares;
 
     /**
-     * @description 用户进程管理
+     * @description user process
      *
      * @var UserProcess
      */
     private UserProcess $userProcess;
 
     /**
-     * @description 对象实例
+     * @description Application instance
      *
      * @var Application
      */
     private static ?Application $instance = null;
 
     /**
-     * @description 全局变量
+     * @description global
      *
      * @var Array
      */
     private Array $globals;
 
+    /**
+     * @description event dispatcher
+     *
+     * @var Dispatch
+     */
     private Dispatch $dispatch;
 
+    /**
+     * @description event listener provider
+     *
+     * @var ListenerProvider
+     */
     private ListenerProvider $provider;
 
+    /**
+     * @description event supports
+     *
+     * @var Array
+     */
     private static Array $events = array(
         'console' => Event\Console::class,
         'monitor' => Event\Monitor::class,
@@ -127,10 +142,15 @@ class Application implements AppInterface
         'view' => Event\View::class
     );
 
+    /**
+     * @description events listened
+     *
+     * @var Array
+     */
     private Array $onEvents;
 
     /**
-     * @description 获取对象实例
+     * @description get instance
      *
      * @param Array $config
      *
@@ -146,7 +166,7 @@ class Application implements AppInterface
     }
 
     /**
-     * @description 构造
+     * @description constructor
      *
      * @param Array $config
      *
@@ -168,7 +188,7 @@ class Application implements AppInterface
     {}
 
     /**
-     * @description 注册全局变量
+     * @description register global
      *
      * @param string $name
      *
@@ -176,26 +196,26 @@ class Application implements AppInterface
      *
      * @return Application
      */
-    public function registerGlobal(string $name, $val) : Application
+    public function registerGlobal(string $name, mixed $val) : Application
     {
         $this->globals[$name] = $val;
         return $this;
     }
 
     /**
-     * @description 获取全局变量
+     * @description get global
      *
      * @param string $name
      *
      * @return mixed
      */
-    public function getGlobal(string $name)
+    public function getGlobal(string $name) : mixed
     {
         return $this->globals[$name] ?? null;
     }
 
     /**
-     * @description 注册自动加载
+     * @description register autoload
      *
      * @param Autoload $autoload
      *
@@ -208,7 +228,7 @@ class Application implements AppInterface
     }
 
     /**
-     * @description 注册中间件
+     * @description register middleware
      *
      * @param MiddlewareInterface $middleware
      *
@@ -221,7 +241,7 @@ class Application implements AppInterface
     }
 
     /**
-     * @description 获取默认的中间件
+     * @description get default middlewares
      *
      * @return Array
      */
@@ -231,7 +251,7 @@ class Application implements AppInterface
     }
 
     /**
-     * @description 注册路由
+     * @description register routers
      *
      * @param RoutersInterface $routers
      *
@@ -244,7 +264,7 @@ class Application implements AppInterface
     }
 
     /**
-     * @description 注册服务器
+     * @description register server
      *
      * @param Server $server
      *
@@ -263,17 +283,11 @@ class Application implements AppInterface
     }
 
     /**
-     * @description 处理console事件
+     * @description console event
      *
-     * @param string $path
+     * @param Event\Console $event
      *
-     * @param string $method
-     *
-     * @param Array $args
-     *
-     * @param string $traceId
-     *
-     * @return null
+     * @return void
      */
     public function console(Event\Console $event) : void
     {
@@ -287,7 +301,7 @@ class Application implements AppInterface
     }
 
     /**
-     * @description 注册容器
+     * @description register container
      *
      * @param ContainerInterface $container
      *
@@ -300,7 +314,7 @@ class Application implements AppInterface
     }
 
     /**
-     * @description 检查配置
+     * @description check config
      *
      * @return Application
      *
@@ -322,11 +336,9 @@ class Application implements AppInterface
     }
 
     /**
-     * @description 工作流
+     * @description work flow
      *
-     * @param Swoole\Http\Request $request
-     *
-     * @param string $traceId
+     * @param Event\Workflow $event
      *
      * @return Array
      */
@@ -383,7 +395,7 @@ class Application implements AppInterface
      *
      * @param Array $data
      *
-     * @return null
+     * @return void
      */
     public function monitor(Event\Monitor $event) : void
     {
@@ -394,7 +406,7 @@ class Application implements AppInterface
     }
 
     /**
-     * @description 事件监听
+     * @description event listener
      *
      * @param string $type
      *
@@ -421,11 +433,11 @@ class Application implements AppInterface
     }
 
     /**
-     * @description 运用启动
+     * @description app run
      *
-     * @return null
+     * @return void
      */
-    public function run()
+    public function run() : void
     {
         if (!is_object($this->server)) {
             throw new KoveyException('server not register');
@@ -435,33 +447,33 @@ class Application implements AppInterface
     }
 
     /**
-     * @description 注册启动类
+     * @description register bootstrap
      *
      * @param mixed $bootstrap
      *
      * @return Application
      */
-    public function registerBootstrap($bootstrap) : Application
+    public function registerBootstrap(mixed $bootstrap) : Application
     {
         $this->bootstrap = $bootstrap;
         return $this;
     }
 
     /**
-     * @description 注册自定义启动
+     * @description register custom bootstrap
      *
      * @param mixed $bootstrap
      *
      * @return Application
      */
-    public function registerCustomBootstrap($bootstrap) : Application
+    public function registerCustomBootstrap(mixed $bootstrap) : Application
     {
         $this->customBootstrap = $bootstrap;
         return $this;
     }
 
     /**
-     * @description 启动前初始化
+     * @description run bootstrap
      *
      * @return Application
      */
@@ -489,7 +501,7 @@ class Application implements AppInterface
     }
 
     /**
-     * @description 执行Action
+     * @description run action
      *
      * @param RequestInterface $req
      *
@@ -603,7 +615,7 @@ class Application implements AppInterface
     }
 
     /**
-     * @description 获取配置
+     * @description get config
      *
      * @return Array
      */
@@ -613,7 +625,7 @@ class Application implements AppInterface
     }
 
     /**
-     * @description 获取服务器
+     * @description get server
      *
      * @return Server
      */
@@ -623,7 +635,7 @@ class Application implements AppInterface
     }
 
     /**
-     * @description 注册GET路由
+     * @description register get router
      *
      * @param string $uri
      *
@@ -638,7 +650,7 @@ class Application implements AppInterface
     }
 
     /**
-     * @description 注册POST路由
+     * @description register post router
      *
      * @param string $uri
      *
@@ -653,7 +665,7 @@ class Application implements AppInterface
     }
 
     /**
-     * @description 注册PUT路由
+     * @description register put router
      *
      * @param string $uri
      *
@@ -668,7 +680,7 @@ class Application implements AppInterface
     }
 
     /**
-     * @description 注册DEL路由
+     * @description register delete router
      *
      * @param string $uri
      *
@@ -683,7 +695,7 @@ class Application implements AppInterface
     }
 
     /**
-     * @description 注册插件
+     * @description register plugin
      *
      * @param string $plugin
      *
@@ -696,13 +708,13 @@ class Application implements AppInterface
     }
 
     /**
-     * @description 初始化连接池
+     * @description init pool event
      *
-     * @param Server $serv
+     * @param Event\Init $event
      *
-     * @return null
+     * @return void
      */
-    public function initPool(Event\Init $event)
+    public function initPool(Event\Init $event) : void
     {
         try {
             foreach ($this->pools as $pool) {
@@ -729,7 +741,7 @@ class Application implements AppInterface
     }
 
     /**
-     * @description 获取用户进程管理
+     * @description get user process
      *
      * @return UserProcess
      */
@@ -739,7 +751,7 @@ class Application implements AppInterface
     }
 
     /**
-     * @description 注册进程
+     * @description register process
      *
      * @param string $name
      *
@@ -759,7 +771,7 @@ class Application implements AppInterface
     }
 
     /**
-     * @description 注册本地类库
+     * @description register local library path
      *
      * @param string $path
      *
@@ -772,7 +784,7 @@ class Application implements AppInterface
     }
 
     /**
-     * @description 注册连接池
+     * @description register pool
      *
      * @param string $name
      *
@@ -790,7 +802,7 @@ class Application implements AppInterface
     }
 
     /**
-     * @description 获取连接池
+     * @description get pool
      *
      * @param string $name
      *
@@ -804,8 +816,7 @@ class Application implements AppInterface
     }
 
     /**
-     * @description 获取容器
-     *
+     * @description get container
      *
      * @return ControllerInterface
      */
@@ -815,7 +826,7 @@ class Application implements AppInterface
     }
 
     /**
-     * @description 注册进程管理
+     * @description register user process
      *
      * @param UserProcess $userProcess
      *

@@ -1,7 +1,7 @@
 <?php
 /**
  *
- * @description HTTP 错误码
+ * @description http error code
  *
  * @package     Web\Server
  *
@@ -64,7 +64,7 @@ class ErrorTemplate
     const HTTP_CODE_505 = 505;
 
     /**
-     * @description 简单的错误模板
+     * @description error templates
      *
      * @var Array
      */
@@ -77,7 +77,7 @@ class ErrorTemplate
     );
 
     /**
-     * @description 获取错误模板
+     * @description get content
      *
      * @param int $code
      *

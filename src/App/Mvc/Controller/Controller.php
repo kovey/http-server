@@ -1,7 +1,7 @@
 <?php
 /**
  *
- * @description 控制器类
+ * @description controller
  *
  * @package     App\Mvc
  *
@@ -19,35 +19,35 @@ use Kovey\Web\App\Mvc\View\ViewInterface;
 class Controller implements ControllerInterface
 {
     /**
-     * @description 页面
+     * @description view
      *
      * @var ViewInterface
      */
     protected ViewInterface $view;
 
     /**
-     * @description 请求对象
+     * @description request
      *
      * @var RequestInterface
      */
     protected RequestInterface $req;
 
     /**
-     * @description 插件
+     * @description plugins
      *
      * @var Array
      */
     protected Array $plugins;
 
     /**
-     * @description 是否禁用VIEW
+     * @description disable view
      *
      * @var bool
      */
     protected bool $isViewDisabled;
 
     /**
-     * @description 是否禁用插件
+     * @description disable plugins
      *
      * @var bool
      */
@@ -61,7 +61,7 @@ class Controller implements ControllerInterface
     protected ResponseInterface $res;
 
     /**
-     * @description 构造函数
+     * @description construct
      *
      * @param RequestInterface $req
      *
@@ -84,37 +84,39 @@ class Controller implements ControllerInterface
     }
 
     /**
-     * @description 设置VIEW
+     * @description set view
      *
      * @param ViewInterface $view
      *
-     * @return null
+     * @return ControllerInterface
      */
-    public function setView(ViewInterface $view)
+    public function setView(ViewInterface $view) : ControllerInterface
     {
         $this->view = $view;
+        return $this;
     }
 
     /**
      * @description 初始化
      *
-     * @return null
+     * @return void
      */
-    protected function init()
+    protected function init() : void
     {}
 
     /**
-     * @description 渲染页面
+     * @description render view
      *
-     * @return null
+     * @return ControllerInterface
      */
-    public function render()
+    public function render() : ControllerInterface
     {
         $this->view->render();
+        return $this;
     }
 
     /**
-     * @description 获取响应对象
+     * @description get response
      *
      * @return ResponseInterface
      */
@@ -124,7 +126,7 @@ class Controller implements ControllerInterface
     }
 
     /**
-     * @description 获取请求对象
+     * @description get request
      *
      * @return RequestInterface
      */
@@ -134,11 +136,11 @@ class Controller implements ControllerInterface
     }
 
     /**
-     * @description 初始化插件
+     * @description init plugins
      *
-     * @return null
+     * @return ControllerInterface
      */
-    public function initPlugins(Array $plugins)
+    public function initPlugins(Array $plugins) : ControllerInterface
     {
         foreach ($plugins as $plugin) {
             $pclass = '\\' . $plugin;
@@ -149,10 +151,12 @@ class Controller implements ControllerInterface
 
             $this->plugins[$plugin] = $pg;
         }
+
+        return $this;
     }
 
     /**
-     * @description 获取插件
+     * @description get plugin
      *
      * @return Array
      */
@@ -162,27 +166,29 @@ class Controller implements ControllerInterface
     }
 
     /**
-     * @description 页面跳转
+     * @description redirect
      *
-     * @return null
+     * @return ControllerInterface
      */
-    public function redirect($url)
+    public function redirect($url) : ControllerInterface
     {
         $this->getResponse()->redirect($url);
+        return $this;
     }
 
     /**
-     * @description 禁用页面
+     * @description disable view
      *
-     * @return null
+     * @return ControllerInterface
      */
-    public function disableView()
+    public function disableView() : ControllerInterface
     {
         $this->isViewDisabled = true;
+        return $this;
     }
 
     /**
-     * @description 页面是否禁用
+     * @description view is disabled or enabled
      *
      * @return bool
      */
@@ -192,7 +198,7 @@ class Controller implements ControllerInterface
     }
 
     /**
-     * @description 插件是否禁用
+     * @description plugin is disabled or enabled
      *
      * @return bool
      */
@@ -202,22 +208,24 @@ class Controller implements ControllerInterface
     }
 
     /**
-     * @description 禁用插件
+     * @description disable plugin
      *
-     * @return null
+     * @return ControllerInterface
      */
-    public function disablePlugin()
+    public function disablePlugin() : ControllerInterface
     {
         $this->isPluginDisabled = true;
+        return $this;
     }
 
     /**
-     * @description 设置头信息
+     * @description set header
      *
-     * @return null
+     * @return ControllerInterface
      */
-    public function setHeader(string $key, string $val)
+    public function setHeader(string $key, string $val) : ControllerInterface
     {
         $this->getResponse()->setHeader($key, $val);
+        return $this;
     }
 }

@@ -67,9 +67,9 @@ class File implements SessionInterface
     /**
      * @description 初始化
      *
-     * @return null
+     * @return void
      */
-    private function init()
+    private function init() : void
     {
         if (!empty($this->sessionId)) {
             if (!is_file($this->file)) {
@@ -94,7 +94,7 @@ class File implements SessionInterface
      *
      * @return mixed
      */
-    public function get(string $name)
+    public function get(string $name) : mixed
     {
         return $this->content[$name] ?? null;
     }
@@ -106,9 +106,9 @@ class File implements SessionInterface
      *
      * @param mixed $val
      *
-     * @return null
+     * @return void
      */
-    public function set(string $name, $val)
+    public function set(string $name, mixed $val) : void
     {
         $this->content[$name] = $val;
     }
@@ -116,9 +116,9 @@ class File implements SessionInterface
     /**
      * @description 保存到REDIS
      *
-     * @return null
+     * @return void
      */
-    private function saveToFile()
+    private function saveToFile() : void
     {
         go (function () {
             System::writeFile($this->file, Json::encode($this->content));
@@ -132,7 +132,7 @@ class File implements SessionInterface
      *
      * @return mixed
      */
-    public function __get(string $name)
+    public function __get(string $name) : mixed
     {
         return $this->get($name);
     }
@@ -144,9 +144,9 @@ class File implements SessionInterface
      *
      * @param mixed $val
      *
-     * @return null
+     * @return void
      */
-    public function __set(string $name, $val)
+    public function __set(string $name, mixed $val) : void
     {
         $this->set($name, $val);
     }
@@ -187,9 +187,9 @@ class File implements SessionInterface
     /**
      * @description 创建sessionID
      *
-     * @return null
+     * @return void
      */
-    private function newSessionId()
+    private function newSessionId() : void
     {
         $this->sessionId = password_hash(uniqid('session', true) . random_int(1000000, 9999999), PASSWORD_DEFAULT);
         $this->file = $this->dir . '/' . str_replace(array('$', '/', '.'), '', $this->sessionId); 
@@ -198,9 +198,9 @@ class File implements SessionInterface
     /**
      * @description 清除
      *
-     * @return null
+     * @return void
      */
-    public function clear()
+    public function clear() : void
     {
         $this->content = array();
     }

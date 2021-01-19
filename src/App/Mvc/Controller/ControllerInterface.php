@@ -1,7 +1,7 @@
 <?php
 /**
  *
- * @description 控制器接口
+ * @description controller interface
  *
  * @package     Controller
  *
@@ -19,7 +19,7 @@ use Kovey\Web\App\Mvc\View\ViewInterface;
 interface  ControllerInterface
 {
     /**
-     * @description 构造函数
+     * @description construct
      *
      * @param RequestInterface $req
      *
@@ -32,72 +32,72 @@ interface  ControllerInterface
     public function __construct(RequestInterface $req, ResponseInterface $res, Array $plugins = array());
 
     /**
-     * @description 设置VIEW
+     * @description set view
      *
      * @param ViewInterface $view
      *
-     * @return null
+     * @return ControllerInterface
      */
-    public function setView(ViewInterface $view);
+    public function setView(ViewInterface $view) : ControllerInterface;
 
     /**
-     * @description 渲染页面
+     * @description render view
      *
-     * @return null
+     * @return ControllerInterface
      */
-    public function render();
+    public function render() : ControllerInterface;
 
     /**
-     * @description 获取响应对象
+     * @description get response
      *
      * @return ResponseInterface
      */
     public function getResponse() : ResponseInterface;
 
     /**
-     * @description 获取请求对象
+     * @description get request
      *
      * @return RequestInterface
      */
     public function getRequest() : RequestInterface;
 
     /**
-     * @description 初始化插件
+     * @description init plugins
      *
-     * @return null
+     * @return ControllerInterface
      */
-    public function initPlugins(Array $plugins);
+    public function initPlugins(Array $plugins) : ControllerInterface;
 
     /**
-     * @description 获取插件
+     * @description get plugins
      *
      * @return Array
      */
     public function getPlugins() : Array;
 
     /**
-     * @description 页面跳转
+     * @description redirect
      *
-     * @return null
+     * @return ControllerInterface
      */
-    public function redirect($url);
+    public function redirect($url) : ControllerInterface;
 
     /**
-     * @description 禁用页面
+     * @description disable view
      *
-     * @return null
+     * @return ControllerInterface
      */
-    public function disableView();
+    public function disableView() : ControllerInterface;
 
     /**
-     * @description 页面是否禁用
+     * @description view status
      *
      * @return bool
      */
     public function isViewDisabled() : bool;
 
     /**
-     * @description 插件是否禁用
+     * @description plugins status
      *
      * @return bool
      */
@@ -106,18 +106,18 @@ interface  ControllerInterface
     /**
      * @description 禁用插件
      *
-     * @return null
+     * @return ControllerInterface
      */
-    public function disablePlugin();
+    public function disablePlugin() : ControllerInterface;
 
     /**
-     * @description 设置头信息
+     * @description set header
      *
      * @param string $key
      *
      * @param string $val
      *
-     * @return null
+     * @return ControllerInterface
      */
-    public function setHeader(string $key, string $val);
+    public function setHeader(string $key, string $val) : ControllerInterface;
 }

@@ -1,7 +1,7 @@
 <?php
 /**
  *
- * @description http 服务
+ * @description http server
  *
  * @package     Web\Server
  *
@@ -24,35 +24,35 @@ use Kovey\Web\Event;
 class Server
 {
     /**
-     * @description 服务器
+     * @description server
      *
      * @var Swoole\Http\Server
      */
     private \Swoole\Http\Server $serv;
 
     /**
-     * @description 配置
+     * @description config
      *
      * @var Array
      */
     private Array $config;
 
     /**
-     * @description 允许的事件类型
+     * @description events support
      *
      * @var Array
      */
     private Array $eventsTypes;
 
     /**
-     * @description 静态目录
+     * @description static dir
      *
      * @var Array
      */
     private Array $staticDir;
 
     /**
-     * @description 是否在docker中运行
+     * @description run on docker ?
      *
      * @var bool
      */
@@ -73,7 +73,7 @@ class Server
     private ListenerProvider $provider;
 
     /**
-     * @description 构造
+     * @description construct
      *
      * @param Array $config
      *
@@ -100,7 +100,7 @@ class Server
     }
 
     /**
-     * @description 事件监听
+     * @description event listener
      *
      * @param string $name
      *
@@ -126,7 +126,7 @@ class Server
     }
 
     /**
-     * @description 初始化
+     * @description init
      *
      * @return Server
      */
@@ -202,11 +202,11 @@ class Server
     }
 
     /**
-     * @description 扫描静态资源目录
+     * @description scan static dir
      *
-     * @return null
+     * @return void
      */
-    private function scanStaticDir()
+    private function scanStaticDir() : void
     {
         $this->staticDir = array();
 
@@ -225,7 +225,7 @@ class Server
     }
 
     /**
-     * @description 初始化回调
+     * @description init callback
      *
      * @return Server
      */
@@ -242,7 +242,7 @@ class Server
     }
 
     /**
-     * @description 监听进程间通讯
+     * @description listen pipeMessage
      *
      * @param Swoole\Http\Server $serv
      *
@@ -250,9 +250,9 @@ class Server
      *
      * @param mixed $data
      *
-     * @return null
+     * @return void
      */
-    public function pipeMessage(\Swoole\Http\Server $serv, PipeMessage $message)
+    public function pipeMessage(\Swoole\Http\Server $serv, PipeMessage $message) : void
     {
         try {
             $event = new Event\Console($message->data['p'] ?? '', $message->data['m'] ?? '', $message->data['a'] ?? array(), $message->data['t'] ?? '');
@@ -262,33 +262,42 @@ class Server
         }
     }
 
-    public function workerError(\Swoole\Http\Server $serv, \Swoole\Server\StatusInfo $info)
+    /**
+     * @description worker error event
+     *
+     * @param Swoole\Http\Server $serv
+     *
+     * @param Swoole\Server\StatusInfo $info
+     *
+     * @return void
+     */
+    public function workerError(\Swoole\Http\Server $serv, \Swoole\Server\StatusInfo $info) : void
     {
         Logger::writeWarningLogSync(__LINE__, __FILE__, json_encode($info));
     }
 
     /**
-     * @description Manager 进程启动
+     * @description Manager start event
      *
      * @param Swoole\Http\Server $serv
      *
-     * @return null
+     * @return void
      */
-    public function managerStart(\Swoole\Http\Server $serv)
+    public function managerStart(\Swoole\Http\Server $serv) : void
     {
         ko_change_process_name($this->config['name'] . ' master');
     }
 
     /**
-     * @description Worker 进程启动
+     * @description Worker start event
      *
      * @param Swoole\Http\Server $serv
      *
      * @param int $workerId
      *
-     * @return null
+     * @return void
      */
-    public function workerStart(\Swoole\Http\Server $serv, $workerId)
+    public function workerStart(\Swoole\Http\Server $serv, $workerId) : void
     {
         ko_change_process_name($this->config['name'] . ' worker');
 
@@ -297,7 +306,7 @@ class Server
     }
 
     /**
-     * @description 判断是否是静态资源目录
+     * @description is static resource
      *
      * @param string $uri
      *
@@ -314,15 +323,15 @@ class Server
     }
 
     /**
-     * @description Worker 进程启动
+     * @description request event
      *
      * @param Swoole\Http\Request $request
      *
      * @param Swoole\Http\Response $response
      *
-     * @return null
+     * @return void
      */
-    public function request(\Swoole\Http\Request $request, \Swoole\Http\Response $response)
+    public function request(\Swoole\Http\Request $request, \Swoole\Http\Response $response) : void
     {
         if ($this->isStatic($request->server['request_uri'] ?? '')) {
             return;
@@ -423,11 +432,13 @@ class Server
      *
      * @param string $body
      *
+     * @return void
+     *
      */
     private function monitor(
         float $begin, float $end, string $uri, string $params, string $ip, int $time, int $code, string $body, string $traceId,
         string $class, string $method, string $reqMethod, string $trace, string $err
-    )
+    ) : void
     {
         try {
             $event = new Event\Monitor(array(
@@ -459,31 +470,29 @@ class Server
     }
 
     /**
-     * @description 启动
+     * @description start
      *
-     * @return null
+     * @return void
      */
-    public function start()
+    public function start() : void
     {
         $this->serv->start();
     }
 
     /**
-     * @description 链接关闭
+     * @description disconnect
      *
      * @param Swoole\Http\Server $server
      *
-     * @param int $fd
+     * @param Swoole\Server\Event
      *
-     * @param int $reactorId
-     *
-     * @return null
+     * @return void
      */
-    public function close(\Swoole\Http\Server $server, \Swoole\Server\Event $event)
+    public function close(\Swoole\Http\Server $server, \Swoole\Server\Event $event) : void
     {}
 
     /**
-     * @description 获取服务器对象
+     * @description get server
      *
      * @return Swoole\Http\Server
      */
