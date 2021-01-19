@@ -246,9 +246,7 @@ class Server
      *
      * @param Swoole\Http\Server $serv
      *
-     * @param int $workerId
-     *
-     * @param mixed $data
+     * @param PipeMessage $message
      *
      * @return void
      */
@@ -297,7 +295,7 @@ class Server
      *
      * @return void
      */
-    public function workerStart(\Swoole\Http\Server $serv, $workerId) : void
+    public function workerStart(\Swoole\Http\Server $serv, int $workerId) : void
     {
         ko_change_process_name($this->config['name'] . ' worker');
 
