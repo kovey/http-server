@@ -13,6 +13,7 @@ namespace Kovey\Web\App\Mvc\View;
 
 use Kovey\Web\App\Http\Response\ResponseInterface;
 use Kovey\Web\App\Mvc\View\ViewInterface;
+use Kovey\Web\Exception\PageNotFoundException;
 
 class Sample implements ViewInterface
 {
@@ -99,6 +100,10 @@ class Sample implements ViewInterface
      */
     public function render() : ViewInterface
     {
+        if (!is_file($this->template)) {
+            throw new PageNotFoundException("template " . $this->template . " is not exists.");
+        }
+
         ob_start();
         ob_implicit_flush(0);
         extract($this->data);

@@ -373,7 +373,7 @@ class Application implements AppInterface
                 $result = $result->toArray();
             }
         } catch (Exception\PageNotFoundException $e) {
-            Logger::writeExceptionLog(__LINE__, __FILE__, $e, $traceId);
+            Logger::writeExceptionLog(__LINE__, __FILE__, $e, $event->getTraceId());
             $result['httpCode'] = ErrorTemplate::HTTP_CODE_404;
             $result['content'] = ErrorTemplate::getContent(ErrorTemplate::HTTP_CODE_404);
             $result['trace'] = $e->getTraceAsString();
@@ -504,7 +504,7 @@ class Application implements AppInterface
     /**
      * @description run action
      *
-     * @param Event\Pipeline $traceId
+     * @param Event\Pipeline $event
      *
      * @return Array
      */

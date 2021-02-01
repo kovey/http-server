@@ -65,19 +65,19 @@ class WorkPipe
         $router = $event->getRouter();
         $conFile = APPLICATION_PATH . '/' . $this->controllerPath . $router->getClassPath();
         if (!is_file($conFile)) {
-            throw new Exception\PageNotFoundExcpetion("file of " . $router->getController() . " is not exists, controller file \" $conFile\".");
+            throw new Exception\PageNotFoundException("file of " . $router->getController() . " is not exists, controller file \" $conFile\".");
         }
 
         $action = $router->getActionName();
         try {
             $objectExt = $this->container->getKeywords($router->getClassName(), $action);
         } catch (\ReflectionException $e) {
-            throw new Exception\PageNotFoundExcpetion($e->getMessage());
+            throw new Exception\PageNotFoundException($e->getMessage());
         }
 
         $obj = $this->container->get($router->getClassName(), $event->getTraceId(), $objectExt['ext'], $event->getRequest(), $event->getResponse(), $this->plugins);
         if (!$obj instanceof ControllerInterface) {
-            throw new Exception\PageNotFoundExcpetion("class " . $router->getClassName() . " is not extends Kovey\Web\App\Mvc\Controller\ControllerInterface.");
+            throw new Exception\PageNotFoundException("class " . $router->getClassName() . " is not extends Kovey\Web\App\Mvc\Controller\ControllerInterface.");
         }
 
         if ($objectExt['openTransaction']) {
@@ -101,10 +101,6 @@ class WorkPipe
         }
 
         $template = APPLICATION_PATH . '/' . $this->viewPath . '/' . $router->getViewPath() . '.' . $this->templateSuffix;
-        if (!is_file($template)) {
-            throw new PageNotFoundExcpetion("template \"$template\" is not exists.");
-        }
-
         $this->dispatch->dispatch(new Event\View($obj, $template));
     }
 
