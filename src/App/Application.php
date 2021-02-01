@@ -17,8 +17,6 @@ use Kovey\Web\App\Http\Request\RequestInterface;
 use Kovey\Web\App\Http\Response\ResponseInterface;
 use Kovey\Web\App\Http\Router\RouterInterface;
 use Kovey\Web\App\Http\Router\RoutersInterface;
-use Kovey\Web\App\Mvc\Controller\ControllerInterface;
-use Kovey\Web\App\Mvc\View\ViewInterface;
 use Kovey\Process\ProcessAbstract;
 use Kovey\Container\ContainerInterface;
 use Kovey\Pipeline\Middleware\MiddlewareInterface;
@@ -33,6 +31,7 @@ use Kovey\Web\Event;
 use Kovey\Event\Dispatch;
 use Kovey\Event\Listener\Listener;
 use Kovey\Event\Listener\ListenerProvider;
+use Kovey\Web\Exception;
 
 class Application implements AppInterface
 {
@@ -56,13 +55,6 @@ class Application implements AppInterface
      * @var RoutersInterface
      */
     private RoutersInterface $routers;
-
-    /**
-     * @description plugins
-     *
-     * @var Array
-     */
-    private Array $plugins;
 
     /**
      * @description autoload
@@ -149,6 +141,8 @@ class Application implements AppInterface
      */
     private Array $onEvents;
 
+    private WorkPipe $workPipe;
+
     /**
      * @description get instance
      *
@@ -175,13 +169,14 @@ class Application implements AppInterface
     private function __construct(Array $config)
     {
         $this->config = $config;
-        $this->plugins = array();
         $this->pools = array();
         $this->defaultMiddlewares = array();
         $this->globals = array();
         $this->provider = new ListenerProvider();
         $this->dispatch = new Dispatch($this->provider);
         $this->onEvents = array();
+        $this->workPipe = new WorkPipe($config['controllers'] ?? '', $config['views'] ?? '', $config['template'] ?? '');
+        $this->workPipe->setDispatch($this->dispatch);
     }
 
     private function __clone()
@@ -310,6 +305,8 @@ class Application implements AppInterface
     public function registerContainer(ContainerInterface $container) : Application
     {
         $this->container = $container;
+        $this->workPipe->setContainer($container);
+
         return $this;
     }
 
@@ -346,43 +343,47 @@ class Application implements AppInterface
     {
         $req = $this->dispatch->dispatchWithReturn(new Event\Request($event->getRequest()));
         if (!$req instanceof RequestInterface) {
-            Logger::writeErrorLog(__LINE__, __FILE__, 'request is not implements Kovey\Web\App\Http\Request\RequestInterface.', $event->getTraceId());
-            return array();
+            throw new Exception\InternalException('request is not implements Kovey\Web\App\Http\Request\RequestInterface.');
         }
+
         $res = $this->dispatch->dispatchWithReturn(new Event\Response());
         if (!$res instanceof ResponseInterface) {
-            Logger::writeErrorLog(__LINE__, __FILE__, 'request is not implements Kovey\Web\App\Http\Response\ResponseInterface.', $event->getTraceId());
-            return array();
+            throw new Exception\InternalException('request is not implements Kovey\Web\App\Http\Response\ResponseInterface.');
         }
+
         $uri = trim($req->getUri());
         $router = $this->routers->getRouter($uri, $req->getMethod());
         if ($router === null) {
-            Logger::writeErrorLog(__LINE__, __FILE__, 'router is error, uri: ' . $uri, $event->getTraceId());
-            $res->status('405');
-            return $res->toArray();
+            throw new Exception\MethodDisabledException('router is error, uri: ' . $uri);
         }
 
         $req->setController($router->getController())
             ->setAction($router->getAction());
 
-        $result = null;
+        $result = array(
+            'header' => array(
+                'content-type' => 'text/html'
+            ),
+            'cookie' => array()
+        );
+
         try {
             $result = $this->dispatch->dispatchWithReturn(new Event\Pipeline($req, $res, $router, $event->getTraceId()));
             if ($result instanceof ResponseInterface) {
                 $result = $result->toArray();
             }
+        } catch (Exception\PageNotFoundException $e) {
+            Logger::writeExceptionLog(__LINE__, __FILE__, $e, $traceId);
+            $result['httpCode'] = ErrorTemplate::HTTP_CODE_404;
+            $result['content'] = ErrorTemplate::getContent(ErrorTemplate::HTTP_CODE_404);
+            $result['trace'] = $e->getTraceAsString();
+            $result['err'] = $e->getMessage();
         } catch (\Throwable $e) {
             Logger::writeExceptionLog(__LINE__, __FILE__, $e, $event->getTraceId());
-            $result = array(
-                'httpCode' => ErrorTemplate::HTTP_CODE_500,
-                'header' => array(
-                    'content-type' => 'text/html'
-                ),
-                'content' => ErrorTemplate::getContent(ErrorTemplate::HTTP_CODE_500),
-                'cookie' => array(),
-                'err' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            );
+            $result['httpCode'] = ErrorTemplate::HTTP_CODE_500;
+            $result['content'] = ErrorTemplate::getContent(ErrorTemplate::HTTP_CODE_500);
+            $result['trace'] = $e->getTraceAsString();
+            $result['err'] = $e->getMessage();
         }
 
         $result['class'] = $router->getController() . 'Controller';
@@ -515,103 +516,7 @@ class Application implements AppInterface
      */
     public function runAction(RequestInterface $req, ResponseInterface $res, RouterInterface $router, string $traceId) : Array
     {
-        if (!empty($router->getCallable())) {
-            $res->setBody(call_user_func($router->getCallable(), $req, $res));
-            $res->status(200);
-            return $res->toArray();
-        }
-
-        $conFile = APPLICATION_PATH . '/' . $this->config['controllers'] . $router->getClassPath();
-
-        if (!is_file($conFile)) {
-            Logger::writeErrorLog(__LINE__, __FILE__, "file of " . $router->getController() . " is not exists, controller file \" $conFile\".", $traceId);
-            $res->status(404);
-            return $res->toArray();
-        }
-
-        $action = $router->getActionName();
-        try {
-            $objectExt = $this->container->getKeywords($router->getClassName(), $action);
-        } catch (\ReflectionException $e) {
-            Logger::writeExceptionLog(__LINE__, __FILE__, $e, $traceId);
-            $res->status(404);
-            return $res->toArray();
-        }
-
-        $template = APPLICATION_PATH . '/' . $this->config['views'] . '/' . $router->getViewPath() . '.' . $this->config['template'];
-        $obj = $this->container->get($router->getClassName(), $traceId, $objectExt['ext'], $req, $res, $this->plugins);
-        if (!$obj instanceof ControllerInterface) {
-            Logger::writeErrorLog(__LINE__, __FILE__, "class \"$controller\" is not extends Kovey\Web\App\Mvc\Controller\ControllerInterface.", $traceId);
-            $res->status(404);
-            return $res->toArray();
-        }
-
-        $httpCode = $obj->getResponse()->getHttpCode();
-        if ($httpCode == 201 
-            || ($httpCode > 300 && $httpCode < 400)
-        ) {
-            return $obj->getResponse()->toArray();
-        }
-
-        if (!$obj->isViewDisabled()) {
-            $this->dispatch->dispatch(new Event\View($obj, $template));
-        }
-
-        $content = '';
-
-        if ($objectExt['openTransaction']) {
-            $objectExt['database']->getConnection()->beginTransaction();
-            try {
-                if (isset($this->onEvents['run_action'])) {
-                    $content = $this->dispatch->dispatchWithReturn(new Event\RunAction($obj, $action, $this->container->getMethodArguments($router->getClassName(), $action, $traceId)));
-                } else {
-                    $content = call_user_func(array($obj, $action), ...$this->container->getMethodArguments($router->getClassName(), $action, $traceId));
-                }
-                $objectExt['database']->getConnection()->commit();
-            } catch (\Throwable $e) {
-                $objectExt['database']->getConnection()->rollBack();
-                throw $e;
-            }
-        } else {
-            if (isset($this->onEvents['run_action'])) {
-                $content = $this->dispatch->dispatchWithReturn(new Event\RunAction($obj, $action, $this->container->getMethodArguments($router->getClassName(), $action, $traceId)));
-            } else {
-                $content = call_user_func(array($obj, $action), ...$this->container->getMethodArguments($router->getClassName(), $action, $traceId));
-            }
-        }
-
-
-        if ($obj->isViewDisabled()) {
-            $res->setBody($content);
-            $res->status(200);
-            return $res->toArray();
-        }
-
-        $httpCode = $obj->getResponse()->getHttpCode();
-        if ($httpCode == 201 
-            || ($httpCode > 300 && $httpCode < 400)
-        ) {
-            return $obj->getResponse()->toArray();
-        }
-
-        if (!is_file($template)) {
-            Logger::writeErrorLog(__LINE__, __FILE__, "template \"$template\" is not exists.", $traceId);
-            $res->status(404);
-            $res->setBody('');
-            return $res->toArray();
-        }
-
-        $obj->render();
-        $res = $obj->getResponse();
-
-        if (!$obj->isPluginDisabled()) {
-            foreach ($obj->getPlugins() as $plugin) {
-                $plugin->loopShutdown($req, $res);
-            }
-        }
-
-        $res->status(200);
-        return $res->toArray();
+        return $this->workPipe->runWorkPipe($req, $res, $router, $traceId, isset($this->onEvents['run_action']));
     }
 
     /**
@@ -703,7 +608,7 @@ class Application implements AppInterface
      */
     public function registerPlugin(string $plugin) : Application
     {
-        $this->plugins[$plugin] = $plugin;
+        $this->workPipe->addPlugin($plugin);
         return $this;
     }
 
@@ -818,7 +723,7 @@ class Application implements AppInterface
     /**
      * @description get container
      *
-     * @return ControllerInterface
+     * @return ContainerInterface
      */
     public function getContainer() : ContainerInterface
     {

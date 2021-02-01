@@ -18,6 +18,8 @@ use Kovey\Web\App\Mvc\View\ViewInterface;
 
 class Controller implements ControllerInterface
 {
+    protected bool $isOpenTransaction = false;
+
     /**
      * @description view
      *
@@ -227,5 +229,16 @@ class Controller implements ControllerInterface
     {
         $this->getResponse()->setHeader($key, $val);
         return $this;
+    }
+
+    public function openTransaction() : ControllerInterface
+    {
+        $this->isOpenTransaction = true;
+        return $this;
+    }
+
+    public function isOpenTransaction() : bool
+    {
+        return $this->isOpenTransaction;
     }
 }

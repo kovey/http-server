@@ -20,6 +20,7 @@ use Kovey\Event\Dispatch;
 use Kovey\Event\Listener\Listener;
 use Kovey\Event\Listener\ListenerProvider;
 use Kovey\Web\Event;
+use Kovey\Web\Exception\MethodDisabledException;
 
 class Server
 {
@@ -340,25 +341,31 @@ class Server
         $trace = '';
         $err = '';
 
-        $result = array();
+        $result = array(
+            'header' => array(
+                'content-type' => 'text/html'
+            ),
+            'cookie' => array()
+        );
+
         $traceId = $this->getTraceId($request->server['request_uri']);
         try {
             $event = new Event\Workflow($request, $response, $traceId);
             $result = $this->dispatch->dispatchWithReturn($event);
             $trace = $result['trace'] ?? '';
             $err = $result['err'] ?? '';
+        } catch (MethodDisabledException $e) {
+            $trace = $e->getTraceAsString();
+            $err = $e->getMessage();
+            Logger::writeExceptionLog(__LINE__, __FILE__, $e, $traceId);
+            $result['httpCode'] = ErrorTemplate::HTTP_CODE_405;
+            $result['content'] = ErrorTemplate::getContent(ErrorTemplate::HTTP_CODE_405);
         } catch (\Throwable $e) {
             $trace = $e->getTraceAsString();
             $err = $e->getMessage();
             Logger::writeExceptionLog(__LINE__, __FILE__, $e, $traceId);
-            $result = array(
-                'httpCode' => ErrorTemplate::HTTP_CODE_500,
-                'header' => array(
-                    'content-type' => 'text/html'
-                ),
-                'content' => ErrorTemplate::getContent(ErrorTemplate::HTTP_CODE_500),
-                'cookie' => array()
-            );
+            $result['httpCode'] = ErrorTemplate::HTTP_CODE_500;
+            $result['content'] = ErrorTemplate::getContent(ErrorTemplate::HTTP_CODE_500);
         }
 
         $httpCode = $result['httpCode'] ?? ErrorTemplate::HTTP_CODE_500;

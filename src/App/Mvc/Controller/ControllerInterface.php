@@ -120,4 +120,8 @@ interface  ControllerInterface
      * @return ControllerInterface
      */
     public function setHeader(string $key, string $val) : ControllerInterface;
+
+    public function openTransaction() : ControllerInterface;
+
+    public function isOpenTransaction() : bool;
 }
