@@ -14,8 +14,6 @@ namespace Kovey\Web\App;
 use Kovey\Event\Dispatch;
 use Kovey\Web\Exception;
 use Kovey\Web\Event;
-use Kovey\Web\App\Http\Request\RequestInterface;
-use Kovey\Web\App\Http\Response\ResponseInterface;
 use Kovey\Web\App\Http\Router\RouterInterface;
 use Kovey\Web\App\Mvc\Controller\ControllerInterface;
 use Kovey\Container\ContainerInterface;
