@@ -11,6 +11,7 @@
  */
 namespace Kovey\Web\App;
 
+use Swoole\Coroutine\System;
 use PHPUnit\Framework\TestCase;
 use Kovey\Web\App\Bootstrap\Autoload;
 use Kovey\Web\Middleware\Cors;
@@ -18,7 +19,7 @@ use Kovey\Web\App\Http\Router\Routers;
 use Kovey\Web\Server\Server;
 use Kovey\Container\Container;
 use Kovey\Container\ContainerInterface;
-use Kovey\Library\Process\UserProcess;
+use Kovey\Process\UserProcess;
 use Kovey\Connection\Pool\Mysql;
 use Kovey\Connection\Pool\PoolInterface;
 use Kovey\Db\Adapter;
@@ -30,7 +31,7 @@ use Kovey\Web\App\Http\Response\Response;
 use Kovey\Web\App\Http\Request\RequestInterface;
 use Kovey\Web\App\Http\Response\ResponseInterface;
 use Kovey\Web\App\Mvc\View\Sample;
-use Kovey\Web\App\Http\Pipeline\Pipeline;
+use Kovey\Pipeline\Pipeline;
 use Kovey\Library\Util\Json;
 use Kovey\Web\Event;
 
@@ -166,10 +167,10 @@ class ApplicationTest extends TestCase
         Application::getInstance()->on('pipeline', function (Event\Pipeline $event) {
             return (new Pipeline(Application::getInstance()->getContainer()))
                 ->via('handle')
-                ->send($event->getRequest(), $event->getResponse(), $event->getTraceId())
+                ->send($event)
                 ->through(array_merge(Application::getInstance()->getDefaultMiddlewares(), $event->getRouter()->getMiddlewares()))
-                ->then(function (RequestInterface $req, ResponseInterface $res, string $traceId) use ($event) {
-                    return Application::getInstance()->runAction($req, $res, $event->getRouter(), $traceId);
+                ->then(function (Event\Pipeline $event) {
+                    return Application::getInstance()->runAction($event);
                 });
         });
         Application::getInstance()->on('view', function (Event\View $event) {
@@ -194,14 +195,30 @@ class ApplicationTest extends TestCase
 
     public function tearDown() : void
     {
-        if (is_file(APPLICATION_PATH . '/logs/file.pid')) {
-            unlink(APPLICATION_PATH . '/logs/file.pid');
-        }
-        if (is_file(APPLICATION_PATH . '/logs/server.log')) {
-            unlink(APPLICATION_PATH . '/logs/server.log');
-        }
+        System::sleep(0.1);
 
         if (is_dir(APPLICATION_PATH . '/logs')) {
+            foreach (scandir(APPLICATION_PATH . '/logs') as $file) {
+                if ($file == '.' || $file == '..') {
+                    continue;
+                }
+
+                $path = APPLICATION_PATH . '/logs/' . $file;
+                if (is_dir($path)) {
+                    foreach (scandir($path) as $pf) {
+                        if ($pf == '.' || $pf == '..') {
+                            continue;
+                        }
+
+                        unlink($path . '/' . $pf);
+                    }
+                    rmdir($path);
+                    continue;
+                }
+
+                unlink($path);
+            }
+
             rmdir(APPLICATION_PATH . '/logs');
         }
     }

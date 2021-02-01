@@ -43,7 +43,8 @@ class ServerTest extends TestCase
             'package_max_length' => '1M',
             'name' => 'test',
             'host' => '127.0.0.1',
-            'port' => 9501
+            'port' => 9501,
+            'logger_dir' => APPLICATION_PATH . '/logs'
         ));
     }
 
@@ -149,14 +150,28 @@ class ServerTest extends TestCase
     { 
         System::sleep(0.1);
 
-        if (is_file(APPLICATION_PATH . '/logs/file.pid')) {
-            unlink(APPLICATION_PATH . '/logs/file.pid');
-        }
-        if (is_file(APPLICATION_PATH . '/logs/server.log')) {
-            unlink(APPLICATION_PATH . '/logs/server.log');
-        }
-
         if (is_dir(APPLICATION_PATH . '/logs')) {
+            foreach (scandir(APPLICATION_PATH . '/logs') as $file) {
+                if ($file == '.' || $file == '..') {
+                    continue;
+                }
+
+                $path = APPLICATION_PATH . '/logs/' . $file;
+                if (is_dir($path)) {
+                    foreach (scandir($path) as $pf) {
+                        if ($pf == '.' || $pf == '..') {
+                            continue;
+                        }
+
+                        unlink($path . '/' . $pf);
+                    }
+                    rmdir($path);
+                    continue;
+                }
+
+                unlink($path);
+            }
+
             rmdir(APPLICATION_PATH . '/logs');
         }
     }

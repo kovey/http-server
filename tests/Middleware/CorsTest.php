@@ -16,6 +16,8 @@ use Swoole\Http\Request as SHR;
 use Kovey\Library\Util\Json;
 use Kovey\Web\App\Http\Request\Request;
 use Kovey\Web\App\Http\Response\Response;
+use Kovey\Web\Event\Pipeline;
+use Kovey\Web\App\Http\Router\Router;
 
 class CorsTest extends TestCase
 {
@@ -53,9 +55,9 @@ class CorsTest extends TestCase
     public function testCors()
     {
         $cors = new Cors();
-        $this->assertTrue($cors->handle(new Request($this->req), new Response(), function (Request $request, Response $response, string $traceId) {
-            $this->assertEquals('&lt;script src=&quot;https://www.kovey.cn/js/test.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;', $request->getQuery('text'));
+        $this->assertTrue($cors->handle(new Pipeline(new Request($this->req), new Response(), $this->createMock(Router::class), hash('sha256', '123456')), function ($event) {
+            $this->assertEquals('&lt;script src=&quot;https://www.kovey.cn/js/test.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;', $event->getRequest()->getQuery('text'));
             return true;
-        }, hash('sha256', '123456')));
+        }));
     }
 }

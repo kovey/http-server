@@ -103,7 +103,7 @@ class Bootstrap
                     ->send($event)
                     ->through(array_merge($app->getDefaultMiddlewares(), $event->getRouter()->getMiddlewares()))
                     ->then(function (WE\Pipeline $event) use ($app) {
-                        return $app->runAction($event->getRequest(), $event->getResponse(), $event->getRouter(), $event->getTraceId());
+                        return $app->runAction($event);
                     });
             });
     }

@@ -63,6 +63,7 @@ class Sample implements ViewInterface
     public function setTemplate(string $template) : ViewInterface
     {
         $this->template = $template;
+        return $this;
     }
 
     /**

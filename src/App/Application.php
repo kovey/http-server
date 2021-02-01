@@ -504,19 +504,13 @@ class Application implements AppInterface
     /**
      * @description run action
      *
-     * @param RequestInterface $req
-     *
-     * @param ResponseInterface $res
-     *
-     * @param RouterInterface $router
-     *
-     * @param string $traceId
+     * @param Event\Pipeline $traceId
      *
      * @return Array
      */
-    public function runAction(RequestInterface $req, ResponseInterface $res, RouterInterface $router, string $traceId) : Array
+    public function runAction(Event\Pipeline $event) : Array
     {
-        return $this->workPipe->runWorkPipe($req, $res, $router, $traceId, isset($this->onEvents['run_action']));
+        return $this->workPipe->runWorkPipe($event, isset($this->onEvents['run_action']));
     }
 
     /**
