@@ -1,7 +1,6 @@
 <?php
 /**
- *
- * @description 路由器
+ * @description router
  *
  * @package     App\Http\Router
  *
@@ -14,63 +13,39 @@ namespace Kovey\Web\App\Http\Router;
 class Routers implements RoutersInterface
 {
     /**
-     * @description GET路由
+     * @description routers
      *
      * @var Array
      */
-    private Array $getRoutes;
+    private Array $routers;
 
     /**
-     * @description POST路由
-     *
-     * @var Array
-     */
-    private Array $postRoutes;
-
-    /**
-     * @description PUT路由
-     *
-     * @var Array
-     */
-    private Array $putRoutes;
-
-    /**
-     * @description DELETE路由
-     *
-     * @var Array
-     */
-    private Array $delRoutes;
-
-    /**
-     * @description 默认路由
+     * @description default routers
      *
      * @var Array
      */
     private Array $defaults;
 
     /**
-     * @description 是否禁用默认路由
+     * @description disable default router ?
      *
      * @var bool
      */
     private bool $isDisableDefault = false;
 
     /**
-     * @description 构造函数
+     * @description constructor
      *
      * @return Routers
      */
     public function __construct()
     {
-        $this->getRoutes = array();
-        $this->postRoutes = array();
-        $this->putRoutes = array();
-        $this->delRoutes = array();
+        $this->routers = array();
         $this->defaults = array();
     }
 
     /**
-     * @description 获取路由
+     * @description get router
      *
      * @param string $uri
      *
@@ -87,23 +62,7 @@ class Routers implements RoutersInterface
             }
         }
 
-        if ($method === 'get') {
-            return $this->getRoutes[$uri] ?? $this->defaultRoute($uri);
-        }
-
-        if ($method === 'post') {
-            return $this->postRoutes[$uri] ?? $this->defaultRoute($uri);
-        }
-
-        if ($method === 'put') {
-            return $this->putRoutes[$uri] ?? $this->defaultRoute($uri);
-        }
-
-        if ($method === 'delete') {
-            return $this->delRoutes[$uri] ?? $this->defaultRoute($uri);
-        }
-
-        return null;
+        return $this->routers[strtolower($method)][$uri] ?? $this->defaultRoute($uri);
     }
 
     /**
@@ -147,7 +106,7 @@ class Routers implements RoutersInterface
     }
 
     /**
-     * @description 添加GET路由
+     * @description add router
      *
      * @param string $uri
      *
@@ -155,72 +114,26 @@ class Routers implements RoutersInterface
      *
      * @return RoutersInterface
      */
-    public function get(string $uri, RouterInterface $router) : RoutersInterface
+    public function addRouter(string $uri, RouterInterface $router) : RoutersInterface
     {
-        if ($router->isValid()) {
-            $this->getRoutes[$uri] = $router;
+        if (!$router->isValid()) {
+            return $this;
         }
+
+        $this->routers[$router->getMethod()] ??= array();
+        $this->routers[$router->getMethod()][$uri] = $router;
+
         return $this;
     }
 
     /**
-     * @description 添加POST路由
-     *
-     * @param string $uri
-     *
-     * @param RouterInterface $router
+     * @description disable default router
      *
      * @return RoutersInterface
      */
-    public function post(string $uri, RouterInterface $router) : RoutersInterface
-    {
-        if ($router->isValid()) {
-            $this->postRoutes[$uri] = $router;
-        }
-        return $this;
-    }
-
-    /**
-     * @description 添加PUT路由
-     *
-     * @param string $uri
-     *
-     * @param RouterInterface $router
-     *
-     * @return RoutersInterface
-     */
-    public function put(string $uri, RouterInterface $router) : RoutersInterface
-    {
-        if ($router->isValid()) {
-            $this->putRoutes[$uri] = $router;
-        }
-        return $this;
-    }
-
-    /**
-     * @description 添加DELETE路由
-     *
-     * @param string $uri
-     *
-     * @param RouterInterface $router
-     *
-     * @return RoutersInterface
-     */
-    public function delete(string $uri, RouterInterface $router) : RoutersInterface
-    {
-        if ($router->isValid()) {
-            $this->delRoutes[$uri] = $router;
-        }
-        return $this;
-    }
-
-    /**
-     * @description 禁用默认路由
-     *
-     * @return void
-     */
-    public function disableDefault() : void
+    public function disableDefault() : RoutersInterface
     {
         $this->isDisableDefault = true;
+        return $this;
     }
 }

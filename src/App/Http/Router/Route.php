@@ -1,7 +1,6 @@
 <?php
 /**
- *
- * @description 全局路由接口
+ * @description global router interface
  *
  * @package     Router
  *
@@ -12,30 +11,31 @@
 namespace Kovey\Web\App\Http\Router;
 
 use Kovey\Web\App\Application;
+use Kovey\Container\Event\Router as ER;
 
 class Route
 {
     /**
-     * @description 全局大对象
+     * @description app object
      *
      * @var Application
      */
     private static Application $app;
 
     /**
-     * @description 设置APP
+     * @description set app
      *
      * @param Application $app
      *
-     * @return null
+     * @return void
      */
-    public static function setApp(Application $app)
+    public static function setApp(Application $app) : void
     {
         self::$app = $app;
     }
 
     /**
-     * @description 设置GET路由
+     * @description set get router
      *
      * @param string $uri
      *
@@ -45,8 +45,8 @@ class Route
      */
     public static function get(string $uri, array | callable | string $fun = '') : RouterInterface
     {
-        $router = new Router($uri, $fun);
-        self::$app->registerGetRouter($uri, $router);
+        $router = new Router($uri, ER::ROUTER_METHOD_GET, $fun);
+        self::$app->registerRouter($uri, $router);
         return $router;
     }
 
@@ -61,8 +61,8 @@ class Route
      */
     public static function post(string $uri, array | callable | string $fun = '') : RouterInterface
     {
-        $router = new Router($uri, $fun);
-        self::$app->registerPostRouter($uri, $router);
+        $router = new Router($uri, ER::ROUTER_METHOD_POST, $fun);
+        self::$app->registerRouter($uri, $router);
         return $router;
     }
 
@@ -77,8 +77,8 @@ class Route
      */
     public static function put(string $uri, array | callable | string $fun = '') : RouterInterface
     {
-        $router = new Router($uri, $fun);
-        self::$app->registerPutRouter($uri, $router);
+        $router = new Router($uri, ER::ROUTER_METHOD_PUT, $fun);
+        self::$app->registerRouter($uri, $router);
         return $router;
     }
 
@@ -93,8 +93,8 @@ class Route
      */
     public static function delete(string $uri, array | callable | string $fun = '') : RouterInterface
     {
-        $router = new Router($uri, $fun);
-        self::$app->registerDelRouter($uri, $router);
+        $router = new Router($uri, ER::ROUTER_METHOD_DELETE, $fun);
+        self::$app->registerRouter($uri, $router);
         return $router;
     }
 }

@@ -9,28 +9,37 @@
  * @time 2021-02-01 14:29:01
  *
  */
-namespace Kovey\Web\App;
+namespace Kovey\Web\App\Components;
 
-use Kovey\Event\Dispatch;
 use Kovey\Web\Exception;
 use Kovey\Web\Event;
 use Kovey\Web\App\Http\Router\RouterInterface;
 use Kovey\Web\App\Mvc\Controller\ControllerInterface;
 use Kovey\Container\ContainerInterface;
+use Kovey\Web\App\Http\Response\ResponseInterface;
+use Kovey\Web\App\Http\Request\RequestInterface;
+use Kovey\Logger\Logger;
+use Kovey\App\Components\Work;
+use Kovey\Pipeline\Middleware\MiddlewareInterface;
 
-class WorkPipe
+class WorkPipe extends Work
 {
-    private ContainerInterface $container;
-
     private string $controllerPath;
 
     private string $viewPath;
 
     private string $templateSuffix;
 
-    private Dispatch $dispatch;
-
     private Array $plugins;
+
+    private RoutersInterface $routers;
+
+    /**
+     * @description default middleware
+     *
+     * @var Array
+     */
+    private Array $defaultMiddlewares;
 
     public function __construct(string $controllerPath, string $viewPath, string $templateSuffix)
     {
@@ -38,17 +47,18 @@ class WorkPipe
         $this->viewPath = $viewPath;
         $this->templateSuffix = $templateSuffix;
         $this->plugins = array();
+        $this->defaultMiddlewares = array();
     }
 
-    public function setContainer(ContainerInterface $container) : WorkPipe
+    public function setRouters(RoutersInterface $routers) : WorkPipe
     {
-        $this->container = $container;
+        $this->routers = $routers;
         return $this;
     }
 
-    public function setDispatch(Dispatch $dispatch) : WorkPipe
+    public function addRouter(string $uri, RoutersInterface $router) : WorkPipe
     {
-        $this->dispatch = $dispatch;
+        $this->routers->addRouter($uri, $router);
         return $this;
     }
 
@@ -99,14 +109,14 @@ class WorkPipe
         }
 
         $template = APPLICATION_PATH . '/' . $this->viewPath . '/' . $router->getViewPath() . '.' . $this->templateSuffix;
-        $this->dispatch->dispatch(new Event\View($obj, $template));
+        $this->event->dispatch(new Event\View($obj, $template));
     }
 
-    private function triggerAction(ControllerInterface $obj, Event\Pipeline $event, bool $hasRunAction) : ?string
+    private function triggerAction(ControllerInterface $obj, Event\Pipeline $event) : ?string
     {
         $router = $event->getRouter();
-        if ($hasRunAction) {
-            return $this->dispatch->dispatchWithReturn(new Event\RunAction(
+        if ($this->event->listened('run_action')) {
+            return $this->event->dispatchWithReturn(new Event\RunAction(
                 $obj, $router->getActionName(), $this->container->getMethodArguments($router->getClassName(), $router->getActionName(), $event->getTraceId())
             ));
         }
@@ -114,15 +124,15 @@ class WorkPipe
         return call_user_func(array($obj, $router->getActionName()), ...$this->container->getMethodArguments($router->getClassName(), $router->getActionName(), $event->getTraceId()));
     }
 
-    private function getContent(ControllerInterface $obj, Event\Pipeline $event, bool $hasRunAction) : ?string
+    private function getContent(ControllerInterface $obj, Event\Pipeline $event) : ?string
     {
         if (!$obj->isOpenTransaction()) {
-            return $this->triggerAction($obj, $event, $hasRunAction);
+            return $this->triggerAction($obj, $event);
         }
 
         $obj->database->beginTransaction();
         try {
-            $content = $this->triggerAction($obj, $event, $hasRunAction);
+            $content = $this->triggerAction($obj, $event);
             $obj->database->commit();
         } catch (\Throwable $e) {
             $obj->database->rollBack();
@@ -163,7 +173,7 @@ class WorkPipe
         return $event->getResponse()->toArray();
     }
 
-    public function runWorkPipe(Event\Pipeline $event, bool $hasRunAction) : Array
+    public function runWorkPipe(Event\Pipeline $event) : Array
     {
         if (!empty($event->getRouter()->getCallable())) {
             return $this->callRouter($event);
@@ -176,6 +186,80 @@ class WorkPipe
 
         $this->initView($obj, $event->getRouter());
 
-        return $this->viewRender($obj, $event, $this->getContent($obj, $event, $hasRunAction));
+        return $this->viewRender($obj, $event, $this->getContent($obj, $event));
+    }
+
+    public function run(Event\Workflow $event) : App
+    {
+        $req = $this->event->dispatchWithReturn(new Event\Request($event->getRequest()));
+        if (!$req instanceof RequestInterface) {
+            throw new Exception\InternalException('request is not implements Kovey\Web\App\Http\Request\RequestInterface.');
+        }
+
+        $res = $this->event->dispatchWithReturn(new Event\Response());
+        if (!$res instanceof ResponseInterface) {
+            throw new Exception\InternalException('request is not implements Kovey\Web\App\Http\Response\ResponseInterface.');
+        }
+
+        $uri = trim($req->getUri());
+        $router = $this->routers->getRouter($uri, $req->getMethod());
+        if ($router === null) {
+            throw new Exception\MethodDisabledException('router is error, uri: ' . $uri);
+        }
+
+        $req->setController($router->getController())
+            ->setAction($router->getAction());
+
+        $result = array(
+            'header' => array(
+                'content-type' => 'text/html'
+            ),
+            'cookie' => array()
+        );
+
+        try {
+            $result = $this->event->dispatchWithReturn(new Event\Pipeline($req, $res, $router, $event->getTraceId()));
+            if ($result instanceof ResponseInterface) {
+                $result = $result->toArray();
+            }
+        } catch (Exception\PageNotFoundException $e) {
+            Logger::writeExceptionLog(__LINE__, __FILE__, $e, $event->getTraceId());
+            $result['httpCode'] = ErrorTemplate::HTTP_CODE_404;
+            $result['content'] = ErrorTemplate::getContent(ErrorTemplate::HTTP_CODE_404);
+            $result['trace'] = $e->getTraceAsString();
+            $result['err'] = $e->getMessage();
+        } catch (\Throwable $e) {
+            Logger::writeExceptionLog(__LINE__, __FILE__, $e, $event->getTraceId());
+            $result['httpCode'] = ErrorTemplate::HTTP_CODE_500;
+            $result['content'] = ErrorTemplate::getContent(ErrorTemplate::HTTP_CODE_500);
+            $result['trace'] = $e->getTraceAsString();
+            $result['err'] = $e->getMessage();
+        }
+
+        $result['class'] = $router->getController() . 'Controller';
+        $result['method'] = $router->getAction() . 'Action';
+        return $result;
+    }
+
+    public function disableDefaultRouter() : WorkPipe
+    {
+        $this->routers->disableDefault();
+        return $this;
+    }
+
+    public function addMiddleware(MiddlewareInterface $middleware) : WorkPipe
+    {
+        $this->defaultMiddlewares[] = $middleware;
+        return $this;
+    }
+
+    /**
+     * @description get default middlewares
+     *
+     * @return Array
+     */
+    public function getMiddlewares() : Array
+    {
+        return $this->defaultMiddlewares;
     }
 }

@@ -13,38 +13,14 @@ namespace Kovey\Web\Server;
 
 use Swoole\Http\Response;
 use Swoole\Http\Request;
-use Swoole\Server\PipeMessage;
 use Kovey\Logger\Logger;
 use Kovey\Library\Util\Json;
-use Kovey\Event\Dispatch;
-use Kovey\Event\Listener\Listener;
-use Kovey\Event\Listener\ListenerProvider;
 use Kovey\Web\Event;
 use Kovey\Web\Exception\MethodDisabledException;
+use Kovey\App\Components\ServerAbstract;
 
-class Server
+class Server extends ServerAbstract
 {
-    /**
-     * @description server
-     *
-     * @var Swoole\Http\Server
-     */
-    private \Swoole\Http\Server $serv;
-
-    /**
-     * @description config
-     *
-     * @var Array
-     */
-    private Array $config;
-
-    /**
-     * @description events support
-     *
-     * @var Array
-     */
-    private Array $eventsTypes;
-
     /**
      * @description static dir
      *
@@ -60,70 +36,23 @@ class Server
     private bool $isRunDocker;
 
     /**
-     * @description dispatch
-     *
-     * @var Dispatch
-     */
-    private Dispatch $dispatch;
-    
-    /**
-     * @description listener provider
-     *
-     * @var ListenerProvider
-     */
-    private ListenerProvider $provider;
-
-    /**
      * @description construct
      *
      * @param Array $config
      *
      * @return Server
      */
-    public function __construct(Array $config)
+    protected function initServer()
     {
-        $this->config = $config;
         $this->isRunDocker = ($this->config['run_docker'] ?? 'Off') === 'On';
         $this->serv = new \Swoole\Http\Server($this->config['host'], intval($this->config['port']));
-        $this->eventsTypes = array(
+        $this->event->addSupportEvents(array(
             'startedBefore' => Event\StartedBefore::class, 
             'startedAfter' => Event\StartedAfter::class, 
-            'workflow' => Event\Workflow::class, 
-            'init' => Event\Init::class, 
-            'console' => Event\Console::class,
-            'monitor' => Event\Monitor::class
-        );
-
-        $this->provider = new ListenerProvider();
-        $this->dispatch = new Dispatch($this->provider);
+            'workflow' => Event\Workflow::class
+        ));
 
         $this->init();
-    }
-
-    /**
-     * @description event listener
-     *
-     * @param string $name
-     *
-     * @param callable | Array $callback
-     *
-     * @return Server
-     */
-    public function on(string $name, callable | Array $callback)
-    {
-        if (!isset($this->eventsTypes[$name])) {
-            return $this;
-        }
-
-        if (!is_callable($callback)) {
-            return $this;
-        }
-
-        $listener = new Listener();
-        $listener->addEvent($this->eventsTypes[$name], $callback);
-        $this->provider->addListener($listener);
-
-        return $this;
     }
 
     /**
@@ -166,7 +95,7 @@ class Server
         $this->scanStaticDir();
 
         $event = new Event\StartedBefore($this);
-        $this->dispatch->dispatch($event);
+        $this->event->dispatch($event);
 
         $this->initCallBack();
         return $this;
@@ -232,76 +161,10 @@ class Server
      */
     private function initCallBack() : Server
     {
-        $this->serv->on('workerStart', array($this, 'workerStart'));
-        $this->serv->on('managerStart', array($this, 'managerStart'));
         $this->serv->on('request', array($this, 'request'));
         $this->serv->on('close', array($this, 'close'));
-        $this->serv->on('pipeMessage', array($this, 'pipeMessage'));
-        $this->serv->on('workerError', array($this, 'workerError'));
 
         return $this;
-    }
-
-    /**
-     * @description listen pipeMessage
-     *
-     * @param Swoole\Http\Server $serv
-     *
-     * @param PipeMessage $message
-     *
-     * @return void
-     */
-    public function pipeMessage(\Swoole\Http\Server $serv, PipeMessage $message) : void
-    {
-        try {
-            $event = new Event\Console($message->data['p'] ?? '', $message->data['m'] ?? '', $message->data['a'] ?? array(), $message->data['t'] ?? '');
-            $this->dispatch->dispatch($event);
-        } catch (\Throwable $e) {
-            Logger::writeExceptionLog(__LINE__, __FILE__, $e, $message->data['t'] ?? '');
-        }
-    }
-
-    /**
-     * @description worker error event
-     *
-     * @param Swoole\Http\Server $serv
-     *
-     * @param Swoole\Server\StatusInfo $info
-     *
-     * @return void
-     */
-    public function workerError(\Swoole\Http\Server $serv, \Swoole\Server\StatusInfo $info) : void
-    {
-        Logger::writeWarningLogSync(__LINE__, __FILE__, json_encode($info));
-    }
-
-    /**
-     * @description Manager start event
-     *
-     * @param Swoole\Http\Server $serv
-     *
-     * @return void
-     */
-    public function managerStart(\Swoole\Http\Server $serv) : void
-    {
-        ko_change_process_name($this->config['name'] . ' master');
-    }
-
-    /**
-     * @description Worker start event
-     *
-     * @param Swoole\Http\Server $serv
-     *
-     * @param int $workerId
-     *
-     * @return void
-     */
-    public function workerStart(\Swoole\Http\Server $serv, int $workerId) : void
-    {
-        ko_change_process_name($this->config['name'] . ' worker');
-
-        $event = new Event\Init($this);
-        $this->dispatch->dispatch($event);
     }
 
     /**
@@ -351,7 +214,7 @@ class Server
         $traceId = $this->getTraceId($request->server['request_uri']);
         try {
             $event = new Event\Workflow($request, $response, $traceId);
-            $result = $this->dispatch->dispatchWithReturn($event);
+            $result = $this->event->dispatchWithReturn($event);
             $trace = $result['trace'] ?? '';
             $err = $result['err'] ?? '';
         } catch (MethodDisabledException $e) {
@@ -390,7 +253,7 @@ class Server
 
         $response->end($body);
         if (!isset($this->config['monitor_open']) || $this->config['monitor_open'] !== 'Off') {
-            $this->monitor(
+            $this->sendToMonitor(
                 $begin, microtime(true), $request->server['request_uri'] ?? '/', $this->getData($request), $this->getClientIP($request), $time, 
                 $httpCode, $body, $traceId, $result['class'] ?? '', $result['method'] ?? '', $request->server['request_method'], $trace, $err
             );
@@ -440,48 +303,33 @@ class Server
      * @return void
      *
      */
-    private function monitor(
+    private function sendToMonitor(
         float $begin, float $end, string $uri, string $params, string $ip, int $time, int $code, string $body, string $traceId,
         string $class, string $method, string $reqMethod, string $trace, string $err
     ) : void
     {
-        try {
-            $event = new Event\Monitor(array(
-                'delay' => round(($end - $begin) * 1000, 2),
-                'path' => $uri,
-                'request_method' => $reqMethod,
-                'params' => $params,
-                'request_time' => $begin * 10000,
-                'service' => $this->config['name'],
-                'service_type' => 'http',
-                'class' => $class,
-                'method' => $method,
-                'ip' => $ip,
-                'time' => $time,
-                'timestamp' => date('Y-m-d H:i:s', $time),
-                'minute' => date('YmdHi', $time),
-                'http_code' => $code,
-                'response' => $body,
-                'traceId' => $traceId,
-                'from' => $this->config['name'],
-                'end' => $end * 10000,
-                'trace' => $trace,
-                'err' => $err
-            ));
-            $this->dispatch->dispatch($event);
-        } catch (\Throwable $e) {
-            Logger::writeExceptionLog(__LINE__, __FILE__, $e, $traceId);
-        }
-    }
-
-    /**
-     * @description start
-     *
-     * @return void
-     */
-    public function start() : void
-    {
-        $this->serv->start();
+        $this->monitor(array(
+            'delay' => round(($end - $begin) * 1000, 2),
+            'path' => $uri,
+            'request_method' => $reqMethod,
+            'params' => $params,
+            'request_time' => $begin * 10000,
+            'service' => $this->config['name'],
+            'service_type' => 'http',
+            'class' => $class,
+            'method' => $method,
+            'ip' => $ip,
+            'time' => $time,
+            'timestamp' => date('Y-m-d H:i:s', $time),
+            'minute' => date('YmdHi', $time),
+            'http_code' => $code,
+            'response' => $body,
+            'traceId' => $traceId,
+            'from' => $this->config['name'],
+            'end' => $end * 10000,
+            'trace' => $trace,
+            'err' => $err
+        ));
     }
 
     /**
@@ -495,16 +343,6 @@ class Server
      */
     public function close(\Swoole\Http\Server $server, \Swoole\Server\Event $event) : void
     {}
-
-    /**
-     * @description get server
-     *
-     * @return Swoole\Http\Server
-     */
-    public function getServ() : \Swoole\Http\Server
-    {
-        return $this->serv;
-    }
 
     /**
      * @description get trace id

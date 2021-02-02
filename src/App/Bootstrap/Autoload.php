@@ -11,6 +11,8 @@
  */
 namespace Kovey\Web\App\Bootstrap;
 
+use Kovey\App\Components\AutoloadInterface;
+
 class Autoload
 {
     /**
@@ -165,7 +167,7 @@ class Autoload
      *
      * @return Autoload
      */
-    public function addLocalPath(string $path) : Autoload
+    public function addLocalPath(string $path) : AutoloadInterface
     {
         if (!is_dir($path)) {
             return $this;

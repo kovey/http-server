@@ -14,6 +14,17 @@ namespace Kovey\Web\App\Http\Router;
 interface RoutersInterface
 {
     /**
+     * @description add router
+     *
+     * @param string $uri
+     *
+     * @param RouterInterface $router
+     *
+     * @return RoutersInterface
+     */
+    public function addRouter(string $uri, RouterInterface $router) : RoutersInterface;
+
+    /**
      * @description 获取路由
      *
      * @param string $uri
@@ -43,53 +54,9 @@ interface RoutersInterface
     public function defaultRoute(string $uri) : ? RouterInterface;
 
     /**
-     * @description 添加GET路由
-     *
-     * @param string $uri
-     *
-     * @param RouterInterface $router
-     *
-     * @return RoutersInterface
-     */
-    public function get(string $uri, RouterInterface $router) : RoutersInterface;
-
-    /**
-     * @description 添加POST路由
-     *
-     * @param string $uri
-     *
-     * @param RouterInterface $router
-     *
-     * @return RoutersInterface
-     */
-    public function post(string $uri, RouterInterface $router) : RoutersInterface;
-
-    /**
-     * @description 添加PUT路由
-     *
-     * @param string $uri
-     *
-     * @param RouterInterface $router
-     *
-     * @return RoutersInterface
-     */
-    public function put(string $uri, RouterInterface $router) : RoutersInterface;
-
-    /**
-     * @description 添加DELETE路由
-     *
-     * @param string $uri
-     *
-     * @param RouterInterface $router
-     *
-     * @return RoutersInterface
-     */
-    public function delete(string $uri, RouterInterface $router) : RoutersInterface;
-
-    /**
-     * @description 禁用默认路由
+     * @description disable default router
      *
      * @return void
      */
-    public function disableDefault() : void;
+    public function disableDefault() : RoutersInterface;
 }

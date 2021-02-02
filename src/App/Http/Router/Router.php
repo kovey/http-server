@@ -1,7 +1,6 @@
 <?php
 /**
- *
- * @description 路由对象
+ * @description router object
  *
  * @package     Router
  *
@@ -83,23 +82,28 @@ class Router implements RouterInterface
      *
      * @var callable | Array
      */
-    private $callable;
+    private mixed $callable;
+
+    private string $method;
 
     /**
      * @description 构造
      *
      * @param string $uri
      *
+     * @param string $method
+     *
      * @param callable $fun
      *
      * @return Router
      */
-    public function __construct(string $uri, array | callable | string $fun = '')
+    public function __construct(string $uri, string $method, array | callable | string $fun = '')
     {
         $this->uri = str_replace('//', '/', $uri);
         $this->middlewares = array();
         $this->classPath = '';
         $this->isValid = true;
+        $this->method = strtolower($method);
         if (is_callable($fun)) {
             $this->callable = $fun;
             return;
@@ -301,5 +305,10 @@ class Router implements RouterInterface
     public function getUri() : string
     {
         return $this->uri;
+    }
+
+    public function getMethod() : string
+    {
+        return $this->method;
     }
 }

@@ -140,7 +140,7 @@ class Bootstrap
 
         require_once $file;
 
-        $app->registerCustomBootstrap(new \Bootstrap());
+        $app->registerBootstrap(new \Bootstrap());
     }
 
     /**
@@ -180,7 +180,7 @@ class Bootstrap
     {
         $app->getContainer()
             ->on('Router', function (Event\Router $event) use ($app) {
-                $router = new Router($event->getPath(), $event->getRouter());
+                $router = new Router($event->getPath(), $event->getMethod(), $event->getRouter());
                 if (!$router->isValid()) {
                     return;
                 }
@@ -190,16 +190,7 @@ class Bootstrap
                     $router->addMiddleware($validator->setRules($event->getRules()));
                 }
 
-                $method = strtolower($event->getMethod());
-                if ($method === 'post') {
-                    $app->registerPostRouter($event->getPath(), $router);
-                } else if ($method === 'get') {
-                    $app->registerGetRouter($event->getPath(), $router);
-                } else if ($method === 'put') {
-                    $app->registerPutRouter($event->getPath(), $router);
-                } else if ($method === 'delete') {
-                    $app->registerDelRouter($event->getPath(), $router);
-                }
+                $app->registerRouter($event->getPath(), $router);
             })
             ->parse(APPLICATION_PATH . '/' . $app->getConfig()['controllers'], '', 'Controller');
     }

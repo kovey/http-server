@@ -20,11 +20,13 @@ interface RouterInterface
      *
      * @param string $uri
      *
+     * @param string $method
+     *
      * @param callable $fun
      *
      * @return RouterInterface
      */
-    public function __construct(string $uri, array | callable | string $fun = '');
+    public function __construct(string $uri, string $method, array | callable | string $fun = '');
 
     /**
      * @description 获取action
@@ -104,4 +106,6 @@ interface RouterInterface
      * @return string
      */
     public function getUri() : string;
+
+    public function getMethod() : string;
 }    
