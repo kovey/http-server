@@ -49,9 +49,11 @@ interface RoutersInterface
      *
      * @param string $uri
      *
+     * @param string $method
+     *
      * @return RouterInterface
      */
-    public function defaultRoute(string $uri) : ? RouterInterface;
+    public function defaultRoute(string $uri, string $method) : ? RouterInterface;
 
     /**
      * @description disable default router

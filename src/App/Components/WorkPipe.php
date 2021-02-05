@@ -14,6 +14,7 @@ namespace Kovey\Web\App\Components;
 use Kovey\Web\Exception;
 use Kovey\Web\Event;
 use Kovey\Web\App\Http\Router\RouterInterface;
+use Kovey\Web\App\Http\Router\RoutersInterface;
 use Kovey\Web\App\Mvc\Controller\ControllerInterface;
 use Kovey\Container\ContainerInterface;
 use Kovey\Web\App\Http\Response\ResponseInterface;
@@ -21,6 +22,7 @@ use Kovey\Web\App\Http\Request\RequestInterface;
 use Kovey\Logger\Logger;
 use Kovey\App\Components\Work;
 use Kovey\Pipeline\Middleware\MiddlewareInterface;
+use Kovey\Event\EventInterface;
 
 class WorkPipe extends Work
 {
@@ -56,7 +58,7 @@ class WorkPipe extends Work
         return $this;
     }
 
-    public function addRouter(string $uri, RoutersInterface $router) : WorkPipe
+    public function addRouter(string $uri, RouterInterface $router) : WorkPipe
     {
         $this->routers->addRouter($uri, $router);
         return $this;
@@ -189,7 +191,7 @@ class WorkPipe extends Work
         return $this->viewRender($obj, $event, $this->getContent($obj, $event));
     }
 
-    public function run(Event\Workflow $event) : App
+    public function run(EventInterface $event) : Array
     {
         $req = $this->event->dispatchWithReturn(new Event\Request($event->getRequest()));
         if (!$req instanceof RequestInterface) {

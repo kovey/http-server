@@ -13,7 +13,7 @@ namespace Kovey\Web\App\Bootstrap;
 
 use Kovey\App\Components\AutoloadInterface;
 
-class Autoload
+class Autoload implements AutoloadInterface
 {
     /**
      * @description 自定义加载目录

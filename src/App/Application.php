@@ -13,9 +13,12 @@ namespace Kovey\Web\App;
 
 use Kovey\App\App;
 use Kovey\Web\Event;
-use Kovey\App\Event\Monitor;
-use Kovey\App\Event\Console;
 use Kovey\Library\Exception\KoveyException;
+use Kovey\App\Components\ServerInterface;
+use Kovey\Web\App\Components\WorkPipe;
+use Kovey\Pipeline\Middleware\MiddlewareInterface;
+use Kovey\Web\App\Http\Router\RoutersInterface;
+use Kovey\Web\App\Http\Router\RouterInterface;
 
 class Application extends App
 {
@@ -87,7 +90,7 @@ class Application extends App
      */
     public function getDefaultMiddlewares() : Array
     {
-        return $this->work->getDefaultMiddlewares();
+        return $this->work->getMiddlewares();
     }
 
     /**
@@ -123,39 +126,6 @@ class Application extends App
     }
 
     /**
-     * @description console event
-     *
-     * @param Console $event
-     *
-     * @return void
-     */
-    public function console(Console $event) : void
-    {
-        try {
-            $this->event->dispatch($event);
-        } catch (\Exception $e) {
-            Logger::writeExceptionLog(__LINE__, __FILE__, $e, $event->getTraceId());
-        } catch (\Throwable $e) {
-            Logger::writeExceptionLog(__LINE__, __FILE__, $e, $event->getTraceId());
-        }
-    }
-
-    /**
-     * @description register container
-     *
-     * @param ContainerInterface $container
-     *
-     * @return Application
-     */
-    public function registerContainer(ContainerInterface $container) : Application
-    {
-        $this->container = $container;
-        $this->workPipe->setContainer($container);
-
-        return $this;
-    }
-
-    /**
      * @description check config
      *
      * @return Application
@@ -175,21 +145,6 @@ class Application extends App
         }
 
         return $this;
-    }
-
-    /**
-     * @description monitor
-     *
-     * @param Array $data
-     *
-     * @return void
-     */
-    public function monitor(Monitor $event) : void
-    {
-        Monitor::write($event->getData());
-        go (function ($event) {
-            $this->event->dispatch($event);
-        }, $event);
     }
 
     /**
@@ -241,5 +196,10 @@ class Application extends App
     {
         $this->work->disableDefaultRouter();
         return $this;
+    }
+
+    public function workflow(Event\Workflow $event)
+    {
+        return $this->work->run($event);
     }
 }

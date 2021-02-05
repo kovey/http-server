@@ -18,7 +18,7 @@ class RoutersTest extends TestCase
     public function testGETRouter()
     {
         $routers = new Routers();
-        $this->assertInstanceOf(RoutersInterface::class, $routers->get('/kovey/test', new Router('/kovey/test')));
+        $this->assertInstanceOf(RoutersInterface::class, $routers->addRouter('/kovey/test', new Router('/kovey/test', 'GET')));
         $this->assertInstanceOf(RouterInterface::class, $routers->getRouter('/kovey/test', 'get'));
         $this->assertInstanceOf(RouterInterface::class, $routers->getRouter('/kovey/test', 'post'));
         $routers->disableDefault();
@@ -28,7 +28,7 @@ class RoutersTest extends TestCase
     public function testPOSTRouter()
     {
         $routers = new Routers();
-        $this->assertInstanceOf(RoutersInterface::class, $routers->post('/kovey/test', new Router('/kovey/test')));
+        $this->assertInstanceOf(RoutersInterface::class, $routers->addRouter('/kovey/test', new Router('/kovey/test', 'POST')));
         $this->assertInstanceOf(RouterInterface::class, $routers->getRouter('/kovey/test', 'post'));
         $this->assertInstanceOf(RouterInterface::class, $routers->getRouter('/kovey/test', 'get'));
         $routers->disableDefault();
@@ -38,7 +38,7 @@ class RoutersTest extends TestCase
     public function testPUTRouter()
     {
         $routers = new Routers();
-        $this->assertInstanceOf(RoutersInterface::class, $routers->put('/kovey/test', new Router('/kovey/test')));
+        $this->assertInstanceOf(RoutersInterface::class, $routers->addRouter('/kovey/test', new Router('/kovey/test', 'PUT')));
         $this->assertInstanceOf(RouterInterface::class, $routers->getRouter('/kovey/test', 'put'));
         $this->assertInstanceOf(RouterInterface::class, $routers->getRouter('/kovey/test', 'get'));
         $routers->disableDefault();
@@ -48,7 +48,7 @@ class RoutersTest extends TestCase
     public function testDELETERouter()
     {
         $routers = new Routers();
-        $this->assertInstanceOf(RoutersInterface::class, $routers->delete('/kovey/test', new Router('/kovey/test')));
+        $this->assertInstanceOf(RoutersInterface::class, $routers->addRouter('/kovey/test', new Router('/kovey/test', 'DELETE')));
         $this->assertInstanceOf(RouterInterface::class, $routers->getRouter('/kovey/test', 'delete'));
         $this->assertInstanceOf(RouterInterface::class, $routers->getRouter('/kovey/test', 'get'));
         $routers->disableDefault();

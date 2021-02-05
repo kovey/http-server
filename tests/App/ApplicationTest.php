@@ -34,6 +34,8 @@ use Kovey\Web\App\Mvc\View\Sample;
 use Kovey\Pipeline\Pipeline;
 use Kovey\Library\Util\Json;
 use Kovey\Web\Event;
+use Kovey\App\Event\Console;
+use Kovey\App\Event\Monitor;
 
 class ApplicationTest extends TestCase
 {
@@ -113,14 +115,14 @@ class ApplicationTest extends TestCase
 
     public function testRegisterConsole()
     {
-        Application::getInstance()->on('console', function (Event\Console $event) {
+        Application::getInstance()->on('console', function (Console $event) {
             $this->assertEquals('path', $event->getPath());
             $this->assertEquals('method', $event->getMethod());
             $this->assertEquals(array('path', 'method'), $event->getArgs());
             $this->assertEquals(hash('sha256', '123456'), $event->getTraceId());
         });
 
-        $console = new Event\Console('path', 'method', array('path', 'method'), hash('sha256', '123456'));
+        $console = new Console('path', 'method', array('path', 'method'), hash('sha256', '123456'));
         Application::getInstance()->console($console);
     }
 

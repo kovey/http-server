@@ -329,7 +329,7 @@ class Server extends ServerAbstract
             'end' => $end * 10000,
             'trace' => $trace,
             'err' => $err
-        ));
+        ), $traceId);
     }
 
     /**

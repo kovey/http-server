@@ -62,7 +62,7 @@ class Routers implements RoutersInterface
             }
         }
 
-        return $this->routers[strtolower($method)][$uri] ?? $this->defaultRoute($uri);
+        return $this->routers[strtolower($method)][$uri] ?? $this->defaultRoute($uri, $method);
     }
 
     /**
@@ -82,9 +82,11 @@ class Routers implements RoutersInterface
      *
      * @param string $uri
      *
+     * @param string $method
+     *
      * @return RouterInterface
      */
-    public function defaultRoute(string $uri) : ? RouterInterface
+    public function defaultRoute(string $uri, string $method) : ? RouterInterface
     {
         if ($this->isDisableDefault) {
             return null;
@@ -96,7 +98,7 @@ class Routers implements RoutersInterface
             return $this->defaults[$uri];
         }
 
-        $router = new Router($uri);
+        $router = new Router($uri, $method);
         if (!$router->isValid()) {
             return null;
         }

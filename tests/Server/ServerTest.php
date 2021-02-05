@@ -19,6 +19,8 @@ use Swoole\Http\Response as SHRO;
 use Kovey\Library\Util\Json;
 use Kovey\Logger\Logger;
 use Kovey\Web\Event;
+use Kovey\App\Event\Console;
+use Kovey\App\Event\Monitor;
 use Kovey\Event\Exception\EventException;
 
 class ServerTest extends TestCase
@@ -87,7 +89,7 @@ class ServerTest extends TestCase
 
     public function testPipeMessage()
     {
-        self::$server->on('console', function (Event\Console $console) {
+        self::$server->on('console', function (Console $console) {
             $this->assertEquals('path', $console->getPath());
             $this->assertEquals('method', $console->getMethod());
             $this->assertEquals(Array('kovey' => 'framework'), $console->getArgs());
@@ -122,7 +124,7 @@ class ServerTest extends TestCase
             $this->assertEquals($this->req, $event->getRequest());
             return array();
         });
-        self::$server->on('monitor', function (Event\Monitor $event) {
+        self::$server->on('monitor', function (Monitor $event) {
             $data = $event->getData();
             $this->assertTrue(is_array($data));
             $this->assertEquals('/kovey/test/kovey/framework', $data['path']);
