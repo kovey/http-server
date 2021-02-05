@@ -23,6 +23,7 @@ use Kovey\Logger\Logger;
 use Kovey\App\Components\Work;
 use Kovey\Pipeline\Middleware\MiddlewareInterface;
 use Kovey\Event\EventInterface;
+use Kovey\Web\Server\ErrorTemplate;
 
 class WorkPipe extends Work
 {

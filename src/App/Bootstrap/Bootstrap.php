@@ -124,26 +124,6 @@ class Bootstrap
     }
 
     /**
-     * @description init custom bootstrap
-     *
-     * @param Application $app
-     *
-     * @return void
-     */
-    public function __initCustomBoot(Application $app) : void
-    {
-        $bootstrap = $app->getConfig()['boot'] ?? 'application/Bootstrap.php';
-        $file = APPLICATION_PATH . '/' . $bootstrap;
-        if (!is_file($file)) {
-            return;
-        }
-
-        require_once $file;
-
-        $app->registerBootstrap(new \Bootstrap());
-    }
-
-    /**
      * @description init router
      *
      * @param Application $app
