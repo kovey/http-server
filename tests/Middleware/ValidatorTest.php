@@ -83,6 +83,6 @@ class ValidatorTest extends TestCase
         $this->assertInstanceOf(ResponseInterface::class, $result);
         $this->assertEquals("HTTP/1.1 200 OK\r\nServer: kovey framework\r\nConnection: keep-alive\r\nContent-Type: text/html; charset=utf-8\r\n" . 
             "content-type: application/json\r\nContent-Length: 180\r\n\r\n", $result->getHeader());
-        $this->assertEquals('{"code":1000,"msg":"[text] validate failure with MaxLength, value: [<script src=\"https://www.kovey.cn/js/test.js\" type=\"text/javascript\"></script>], condition: [20]","data":[]}', $result->getBody());
+        $this->assertEquals('{"code":1000,"msg":"[text] validate failure with MaxLength, value: [<script src=\"https://www.kovey.cn/js/test.js\" type=\"text/javascript\"></script>], condition: [20]","data":{}}', $result->getBody());
     }
 }

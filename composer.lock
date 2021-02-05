@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2fdc8a6d2a1a4abdcfc5be08427aaad6",
+    "content-hash": "c0f15201153d718290ac214af8af6247",
     "packages": [
         {
             "name": "kovey/app",
-            "version": "v1.0.0",
+            "version": "v1.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/kovey/app.git",
-                "reference": "d421843e840af080c1bca5eb3430e6dc8a933bf9"
+                "reference": "5f260f69f3610fd8b16f9bf991edc4a998cfcbb4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/kovey/app/zipball/d421843e840af080c1bca5eb3430e6dc8a933bf9",
-                "reference": "d421843e840af080c1bca5eb3430e6dc8a933bf9",
+                "url": "https://api.github.com/repos/kovey/app/zipball/5f260f69f3610fd8b16f9bf991edc4a998cfcbb4",
+                "reference": "5f260f69f3610fd8b16f9bf991edc4a998cfcbb4",
                 "shasum": "",
                 "mirrors": [
                     {
@@ -60,7 +60,7 @@
                 "kovey",
                 "php"
             ],
-            "time": "2021-02-05T04:16:55+00:00"
+            "time": "2021-02-05T08:55:28+00:00"
         },
         {
             "name": "kovey/connection",

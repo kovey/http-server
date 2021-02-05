@@ -1,9 +1,9 @@
 <?php
 /**
  *
- * @description 简单的开启session中间件
+ * @description open session
  *
- * @package     
+ * @package     Middleware
  *
  * @time        2019-10-20 20:15:25
  *

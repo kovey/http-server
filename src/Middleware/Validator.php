@@ -1,7 +1,7 @@
 <?php
 /**
  *
- * @description 数据验证中间件
+ * @description validator middleware
  *
  * @package     Middleware
  *
@@ -20,14 +20,14 @@ use Kovey\Web\Server\ErrorTemplate;
 class Validator implements MiddlewareInterface
 {
     /**
-     * @description 规则
+     * @description rules
      *
      * @var Array
      */
     private Array $rules = array();
 
     /**
-     * @description 设置验证规则
+     * @description set rules
      *
      * @param Array $rules
      *
@@ -40,7 +40,7 @@ class Validator implements MiddlewareInterface
     }
 
     /**
-     * @description 中间件的具体实现
+     * @description handle
      *
      * @param EventInterface $event
      *
@@ -59,7 +59,7 @@ class Validator implements MiddlewareInterface
             'post' => $event->getRequest()->getPost(),
             'put' => $event->getRequest()->getPut(),
             'delete' => $event->getRequest()->getDelete(),
-            default => $data = array()
+            default => array()
         };
 
         $valid = new Valid($data);
@@ -76,7 +76,7 @@ class Validator implements MiddlewareInterface
         $event->getResponse()->setBody(Json::encode(array(
             'code' => 1000,
             'msg' => $valid->getError(),
-            'data' => array()
+            'data' => new \ArrayObject()
         )));
         return $event->getResponse();
     }
