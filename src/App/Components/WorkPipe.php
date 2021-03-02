@@ -16,7 +16,6 @@ use Kovey\Web\Event;
 use Kovey\Web\App\Http\Router\RouterInterface;
 use Kovey\Web\App\Http\Router\RoutersInterface;
 use Kovey\Web\App\Mvc\Controller\ControllerInterface;
-use Kovey\Container\ContainerInterface;
 use Kovey\Web\App\Http\Response\ResponseInterface;
 use Kovey\Web\App\Http\Request\RequestInterface;
 use Kovey\Logger\Logger;

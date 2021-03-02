@@ -26,13 +26,6 @@ class Server extends ServerAbstract
     private Array $staticDir;
 
     /**
-     * @description run on docker ?
-     *
-     * @var bool
-     */
-    private bool $isRunDocker;
-
-    /**
      * @description construct
      *
      * @param Array $config
@@ -41,7 +34,6 @@ class Server extends ServerAbstract
      */
     protected function initServer()
     {
-        $this->isRunDocker = ($this->config['run_docker'] ?? 'Off') === 'On';
         $this->serv = new \Swoole\Http\Server($this->config['host'], intval($this->config['port']));
         $this->event->addSupportEvents(array(
             'startedBefore' => Event\StartedBefore::class, 
@@ -59,15 +51,6 @@ class Server extends ServerAbstract
      */
     private function init() : Server
     {
-        $logDir = dirname($this->config['pid_file']);
-        if (!is_dir($logDir)) {
-            mkdir($logDir, 0777, true);
-        }
-
-        if (!is_dir($this->config['logger_dir'] . '/server')) {
-            mkdir($this->config['logger_dir'] . '/server');
-        }
-
         $document = APPLICATION_PATH . $this->config['document_root'];
         if (!is_dir($document)) {
             $document = '';
