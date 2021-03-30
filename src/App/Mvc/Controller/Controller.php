@@ -251,5 +251,7 @@ class Controller implements ControllerInterface
 
             $plugin->setLayout($layout, $dir);
         }
+
+        return $this;
     }
 }
