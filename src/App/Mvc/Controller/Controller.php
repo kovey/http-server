@@ -241,4 +241,15 @@ class Controller implements ControllerInterface
     {
         return $this->isOpenTransaction;
     }
+
+    public function setLayoutPath(string $layout, string $dir) : ControllerInterface
+    {
+        foreach ($this->plugins as $plugin) {
+            if (!method_exists($plugin, 'setLayout')) {
+                continue;
+            }
+
+            $plugin->setLayout($layout, $dir);
+        }
+    }
 }

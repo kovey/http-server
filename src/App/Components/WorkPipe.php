@@ -94,6 +94,16 @@ class WorkPipe extends Work
             $obj->openTransaction();
         }
 
+        if ($router->isViewDisabled()) {
+            $obj->disableView();
+        }
+
+        if ($router->isPluginDisabled()) {
+            $obj->disablePlugin();
+        } else {
+            $obj->setLayoutPath($router->getLayout(), $router->getLayoutDir());
+        }
+
         return $obj;
     }
 

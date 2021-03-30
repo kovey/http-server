@@ -124,4 +124,6 @@ interface  ControllerInterface
     public function openTransaction() : ControllerInterface;
 
     public function isOpenTransaction() : bool;
+
+    public function setLayoutPath(string $layout, string $dir) : ControllerInterface;
 }

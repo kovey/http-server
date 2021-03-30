@@ -68,7 +68,7 @@ class Router implements RouterInterface
      *
      * @var string
      */
-    private string $viewPath;
+    private string $viewPath = '';
 
     /**
      * @description action 名称
@@ -86,6 +86,14 @@ class Router implements RouterInterface
 
     private string $method;
 
+    private string $layout = '';
+
+    private bool $viewDisabled = false;
+    
+    private bool $pluginDisabled = false;
+
+    private string $layoutDir = '';
+
     /**
      * @description 构造
      *
@@ -97,7 +105,7 @@ class Router implements RouterInterface
      *
      * @return Router
      */
-    public function __construct(string $uri, string $method, array | callable | string $fun = '')
+    public function __construct(string $uri, string $method, array | callable | string $fun = '', string | bool $template = '', string | bool $layout = '', string $layoutDir = '')
     {
         $this->uri = str_replace('//', '/', $uri);
         $this->middlewares = array();
@@ -126,9 +134,23 @@ class Router implements RouterInterface
         }
 
         $this->callable = null;
+        if (is_bool($template)) {
+            $this->viewDisabled = $template;
+        } else {
+            $this->viewPath = $template;
+        }
+        if (is_bool($layout)) {
+            $this->pluginDisabled = $layout;
+        } else {
+            $this->layout = $layout;
+        }
+        $this->layoutDir = $layoutDir;
 
         $this->className = trim(str_replace('/', '\\', $this->classPath) . '\\' . ucfirst($this->controller) . 'Controller', '\\');
-        $this->viewPath = strtolower($this->classPath) . '/' . strtolower($this->controller) . '/' . strtolower($this->action);
+        if (empty($this->viewPath)) {
+            $this->viewPath = strtolower($this->classPath) . '/' . strtolower($this->controller) . '/' . strtolower($this->action);
+        }
+
         $this->classPath = $this->classPath . '/' . ucfirst($this->controller) . '.php';
         $this->actionName = $this->action . 'Action';
     }
@@ -310,5 +332,25 @@ class Router implements RouterInterface
     public function getMethod() : string
     {
         return $this->method;
+    }
+
+    public function getLayout() : string
+    {
+        return $this->layout;
+    }
+
+    public function getLayoutDir() : string
+    {
+        return $this->layoutDir;
+    }
+
+    public function isViewDisabled() : bool
+    {
+        return $this->viewDisabled;
+    }
+
+    public function isPluginDisabled() : bool
+    {
+        return $this->pluginDisabled;
     }
 }
