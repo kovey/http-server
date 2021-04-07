@@ -19,6 +19,7 @@ use Kovey\Web\App\Components\WorkPipe;
 use Kovey\Pipeline\Middleware\MiddlewareInterface;
 use Kovey\Web\App\Http\Router\RoutersInterface;
 use Kovey\Web\App\Http\Router\RouterInterface;
+use Kovey\Web\App\Bootstrap;
 
 class Application extends App
 {
@@ -59,6 +60,12 @@ class Application extends App
             'pipeline' => Event\Pipeline::class,
             'view' => Event\View::class
         ));
+
+        $this->bootstrap
+             ->add(new Bootstrap\BaseInit())
+             ->add(new Bootstrap\EventInit())
+             ->add(new Bootstrap\ProcessInit())
+             ->add(new Bootstrap\RouterInit());
 
         return $this;
     }
