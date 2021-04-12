@@ -37,8 +37,6 @@ class WorkPipe extends Work
 
     private RoutersInterface $routers;
 
-    private Array $keywords;
-
     /**
      * @description default middleware
      *
@@ -53,7 +51,6 @@ class WorkPipe extends Work
         $this->templateSuffix = $templateSuffix;
         $this->plugins = array();
         $this->defaultMiddlewares = array();
-        $this->keywords = array();
     }
 
     public function setRouters(RoutersInterface $routers) : WorkPipe
@@ -82,19 +79,21 @@ class WorkPipe extends Work
             throw new Exception\PageNotFoundException("file of " . $router->getController() . " is not exists, controller file \" $conFile\".");
         }
 
+        $keywords = null;
         $action = $router->getActionName();
         try {
-            $this->keywords = $this->container->getKeywords($router->getClassName(), $action);
+            $keywords = $this->container->getKeywords($router->getClassName(), $action);
         } catch (\ReflectionException $e) {
             throw new Exception\PageNotFoundException($e->getMessage());
         }
 
-        $obj = $this->container->get($router->getClassName(), $event->getTraceId(), $this->keywords['ext'], $event->getRequest(), $event->getResponse(), $this->plugins);
+        $obj = $this->container->get($router->getClassName(), $event->getTraceId(), $keywords['ext'], $event->getRequest(), $event->getResponse(), $this->plugins);
         if (!$obj instanceof ControllerInterface) {
             throw new Exception\PageNotFoundException("class " . $router->getClassName() . " is not extends Kovey\Web\App\Mvc\Controller\ControllerInterface.");
         }
-
-        if ($this->keywords['openTransaction']) {
+        
+        $obj->keywords = $keywords;
+        if ($keywords['openTransaction']) {
             $obj->openTransaction();
         }
 
@@ -131,13 +130,14 @@ class WorkPipe extends Work
     private function triggerAction(ControllerInterface $obj, Event\Pipeline $event) : ?string
     {
         $router = $event->getRouter();
+        $params = array_merge($this->container->getMethodArguments($router->getClassName(), $router->getActionName(), $event->getTraceId()), $event->getParams());
         if ($this->event->listened('run_action')) {
             return $this->event->dispatchWithReturn(new Event\RunAction(
-                $obj, $router->getActionName(), $this->container->getMethodArguments($router->getClassName(), $router->getActionName(), $event->getTraceId())
+                $obj, $router->getActionName(), $params
             ));
         }
 
-        return call_user_func(array($obj, $router->getActionName()), ...$this->container->getMethodArguments($router->getClassName(), $router->getActionName(), $event->getTraceId()));
+        return call_user_func(array($obj, $router->getActionName()), ...$params);
     }
 
     private function getContent(ControllerInterface $obj, Event\Pipeline $event) : ?string
@@ -158,7 +158,7 @@ class WorkPipe extends Work
         } catch (\Throwable $e) {
             throw $e;
         } finally {
-            foreach ($this->keywords as $value) {
+            foreach ($obj->keywords as $value) {
                 if ($value instanceof ManualCollectInterface) {
                     $value->collect();
                 }
@@ -227,10 +227,19 @@ class WorkPipe extends Work
             throw new Exception\InternalException('request is not implements Kovey\Web\App\Http\Response\ResponseInterface.');
         }
 
-        $uri = trim($req->getUri());
-        $router = $this->routers->getRouter($uri, $req->getMethod());
+        $uriInfo = $this->getRealUri($uri);
+        $router = $this->routers->getRouter($uriInfo['uri'], $req->getMethod());
         if ($router === null) {
             throw new Exception\MethodDisabledException('router is error, uri: ' . $uri);
+        }
+
+        if (count($router->getParamFields()) < count($uriInfo['params'])) {
+            throw new Exception\MethodDisabledException('router params is error, uri: ' . $uri);
+        }
+
+        $params = array();
+        foreach ($router->getParamFields() as $id => $field) {
+            $params[] = $uriInfo['params'][$id];
         }
 
         $req->setController($router->getController())
@@ -244,7 +253,7 @@ class WorkPipe extends Work
         );
 
         try {
-            $result = $this->event->dispatchWithReturn(new Event\Pipeline($req, $res, $router, $event->getTraceId()));
+            $result = $this->event->dispatchWithReturn(new Event\Pipeline($req, $res, $router, $event->getTraceId(), $params));
             if ($result instanceof ResponseInterface) {
                 $result = $result->toArray();
             }
@@ -287,5 +296,28 @@ class WorkPipe extends Work
     public function getMiddlewares() : Array
     {
         return $this->defaultMiddlewares;
+    }
+
+    private function getRealUri(string $uri) : Array
+    {
+        $uri = trim($uri);
+        $info = explode('/', $uri);
+        $count = count($info);
+        $params = array();
+        if ($count <= 2) {
+            return array(
+                'uri' => $uri,
+                'params' => $params
+            );
+        }
+
+        for ($i = 2; $i < $count; $i ++) {
+            $params = $info[$i];
+        }
+
+        return array(
+            'uri' => '/' . $info[0] . '/' . $info[1],
+            'params' => $params
+        );
     }
 }

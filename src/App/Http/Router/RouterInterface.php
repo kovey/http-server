@@ -116,4 +116,6 @@ interface RouterInterface
     public function getLayout() : string;
 
     public function getLayoutDir() : string;
+
+    public function getParamFields() : Array;
 } 

@@ -26,12 +26,15 @@ class Pipeline implements EventInterface
 
     private string $traceId;
 
-    public function __construct(Request $request, Response $response, Router $router, string $traceId)
+    private Array $params;
+
+    public function __construct(Request $request, Response $response, Router $router, string $traceId, Array $params)
     {
         $this->request = $request;
         $this->response = $response;
         $this->traceId = $traceId;
         $this->router = $router;
+        $this->params = $params;
     }
 
     /**
@@ -72,5 +75,10 @@ class Pipeline implements EventInterface
     public function getRouter() : Router
     {
         return $this->router;
+    }
+
+    public function getParams() : Array
+    {
+        return $this->params;
     }
 }

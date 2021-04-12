@@ -67,7 +67,7 @@ class RouterInit
                     $router->addMiddleware($validator->setRules($event->getRules()));
                 }
 
-                $app->registerRouter($event->getPath(), $router);
+                $app->registerRouter($router->getUri(), $router);
             })
             ->parse(APPLICATION_PATH . '/' . $app->getConfig()['controllers'], '', 'Controller');
     }

@@ -94,6 +94,10 @@ class Router implements RouterInterface
 
     private string $layoutDir = '';
 
+    private string $pattern;
+
+    private Array $paramFields;
+
     /**
      * @description 构造
      *
@@ -107,11 +111,13 @@ class Router implements RouterInterface
      */
     public function __construct(string $uri, string $method, array | callable | string $fun = '', string | bool $template = '', string | bool $layout = '', string $layoutDir = '')
     {
-        $this->uri = str_replace('//', '/', $uri);
+        $this->pattern = '/{([a-zA-Z0-9]+)}/';
+        $this->paramFields = array();
         $this->middlewares = array();
         $this->classPath = '';
         $this->isValid = true;
         $this->method = strtolower($method);
+        $this->parseUri($uri);
         if (is_callable($fun)) {
             $this->callable = $fun;
             return;
@@ -352,5 +358,28 @@ class Router implements RouterInterface
     public function isPluginDisabled() : bool
     {
         return $this->pluginDisabled;
+    }
+
+    private function parseUri(string $uri) : RouterInterface
+    {
+        $this->uri = $uri;
+        if (preg_match_all($this->pattern, $this->uri, $matches) < 1) {
+            $this->uri = str_replace('//', '/', $this->uri);
+            return $this;
+        }
+        if (count($matches) != 2) {
+            $this->uri = str_replace('//', '/', $this->uri);
+            return $this;
+        }
+
+        $this->paramFields = $matches[1];
+        $this->uri = preg_replace($this->pattern, '', $this->uri);
+        $this->uri = str_replace('//', '/', $this->uri);
+        return $this;
+    }
+
+    public function getParamFields() : Array
+    {
+        return $this->paramFields;
     }
 }
