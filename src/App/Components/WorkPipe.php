@@ -227,14 +227,14 @@ class WorkPipe extends Work
             throw new Exception\InternalException('request is not implements Kovey\Web\App\Http\Response\ResponseInterface.');
         }
 
-        $uriInfo = $this->getRealUri($uri);
+        $uriInfo = $this->getRealUri($req->getUri());
         $router = $this->routers->getRouter($uriInfo['uri'], $req->getMethod());
         if ($router === null) {
-            throw new Exception\MethodDisabledException('router is error, uri: ' . $uri);
+            throw new Exception\MethodDisabledException('router is error, uri: ' . $uriInfo['uri']);
         }
 
-        if (count($router->getParamFields()) < count($uriInfo['params'])) {
-            throw new Exception\MethodDisabledException('router params is error, uri: ' . $uri);
+        if (count($router->getParamFields()) > count($uriInfo['params'])) {
+            throw new Exception\MethodDisabledException('router params is error, uri: ' . $uriInfo['uri']);
         }
 
         $params = array();
@@ -304,19 +304,19 @@ class WorkPipe extends Work
         $info = explode('/', $uri);
         $count = count($info);
         $params = array();
-        if ($count <= 2) {
+        if ($count <= 3) {
             return array(
                 'uri' => $uri,
                 'params' => $params
             );
         }
 
-        for ($i = 2; $i < $count; $i ++) {
-            $params = $info[$i];
+        for ($i = 3; $i < $count; $i ++) {
+            $params[] = $info[$i];
         }
 
         return array(
-            'uri' => '/' . $info[0] . '/' . $info[1],
+            'uri' => '/' . $info[1] . '/' . $info[2],
             'params' => $params
         );
     }

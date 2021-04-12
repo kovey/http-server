@@ -362,19 +362,17 @@ class Router implements RouterInterface
 
     private function parseUri(string $uri) : RouterInterface
     {
-        $this->uri = $uri;
+        $this->uri = str_replace('//', '/', $uri);
         if (preg_match_all($this->pattern, $this->uri, $matches) < 1) {
-            $this->uri = str_replace('//', '/', $this->uri);
             return $this;
         }
         if (count($matches) != 2) {
-            $this->uri = str_replace('//', '/', $this->uri);
             return $this;
         }
 
         $this->paramFields = $matches[1];
         $this->uri = preg_replace($this->pattern, '', $this->uri);
-        $this->uri = str_replace('//', '/', $this->uri);
+        $this->uri = str_replace('//', '', $this->uri);
         return $this;
     }
 
