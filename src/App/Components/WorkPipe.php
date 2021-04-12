@@ -23,6 +23,7 @@ use Kovey\App\Components\Work;
 use Kovey\Pipeline\Middleware\MiddlewareInterface;
 use Kovey\Event\EventInterface;
 use Kovey\Web\Server\ErrorTemplate;
+use Kovey\Connection\ManualCollectInterface;
 
 class WorkPipe extends Work
 {
@@ -35,6 +36,8 @@ class WorkPipe extends Work
     private Array $plugins;
 
     private RoutersInterface $routers;
+
+    private Array $keywords;
 
     /**
      * @description default middleware
@@ -50,6 +53,7 @@ class WorkPipe extends Work
         $this->templateSuffix = $templateSuffix;
         $this->plugins = array();
         $this->defaultMiddlewares = array();
+        $this->keywords = array();
     }
 
     public function setRouters(RoutersInterface $routers) : WorkPipe
@@ -80,17 +84,17 @@ class WorkPipe extends Work
 
         $action = $router->getActionName();
         try {
-            $objectExt = $this->container->getKeywords($router->getClassName(), $action);
+            $this->keywords = $this->container->getKeywords($router->getClassName(), $action);
         } catch (\ReflectionException $e) {
             throw new Exception\PageNotFoundException($e->getMessage());
         }
 
-        $obj = $this->container->get($router->getClassName(), $event->getTraceId(), $objectExt['ext'], $event->getRequest(), $event->getResponse(), $this->plugins);
+        $obj = $this->container->get($router->getClassName(), $event->getTraceId(), $this->keywords['ext'], $event->getRequest(), $event->getResponse(), $this->plugins);
         if (!$obj instanceof ControllerInterface) {
             throw new Exception\PageNotFoundException("class " . $router->getClassName() . " is not extends Kovey\Web\App\Mvc\Controller\ControllerInterface.");
         }
 
-        if ($objectExt['openTransaction']) {
+        if ($this->keywords['openTransaction']) {
             $obj->openTransaction();
         }
 
@@ -138,17 +142,27 @@ class WorkPipe extends Work
 
     private function getContent(ControllerInterface $obj, Event\Pipeline $event) : ?string
     {
-        if (!$obj->isOpenTransaction()) {
-            return $this->triggerAction($obj, $event);
-        }
-
-        $obj->database->beginTransaction();
         try {
-            $content = $this->triggerAction($obj, $event);
-            $obj->database->commit();
+            if (!$obj->isOpenTransaction()) {
+                return $this->triggerAction($obj, $event);
+            }
+
+            $obj->database->beginTransaction();
+            try {
+                $content = $this->triggerAction($obj, $event);
+                $obj->database->commit();
+            } catch (\Throwable $e) {
+                $obj->database->rollBack();
+                throw $e;
+            }
         } catch (\Throwable $e) {
-            $obj->database->rollBack();
             throw $e;
+        } finally {
+            foreach ($this->keywords as $value) {
+                if ($value instanceof ManualCollectInterface) {
+                    $value->collect();
+                }
+            }
         }
 
         return $content;
