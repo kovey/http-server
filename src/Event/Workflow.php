@@ -23,11 +23,14 @@ class Workflow implements EventInterface
 
     private string $traceId;
 
-    public function __construct(Request $request, Response $response, string $traceId)
+    private string $spanId;
+
+    public function __construct(Request $request, Response $response, string $traceId, string $spanId)
     {
         $this->request = $request;
         $this->response = $response;
         $this->traceId = $traceId;
+        $this->spanId = $spanId;
     }
 
     /**
@@ -63,5 +66,10 @@ class Workflow implements EventInterface
     public function getTraceId() : string
     {
         return $this->traceId;
+    }
+
+    public function getSpanId() : string
+    {
+        return $this->spanId;
     }
 }

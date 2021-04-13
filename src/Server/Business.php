@@ -45,6 +45,10 @@ class Business implements BusinessInterface
 
     private string $name;
 
+    private string $spanId;
+
+    private string $parentId;
+
     public function __construct(Request $request, Response $response, string $name)
     {
         $this->name = $name;
@@ -65,8 +69,10 @@ class Business implements BusinessInterface
         $this->beginTime = microtime(true);
         $this->time = time();
         $this->traceId = $this->getTraceId();
+        $this->spanId = $this->getSpanId();
         $this->body = '';
         $this->httpCode = ErrorTemplate::HTTP_CODE_200;
+        $this->parentId = $this->request->header['span-id'] ?? 'root';
 
         return $this;
     }
@@ -82,7 +88,7 @@ class Business implements BusinessInterface
     public function run(EventManager $eventManager) : Business
     {
         try {
-            $event = new Event\Workflow($this->request, $this->response, $this->traceId);
+            $event = new Event\Workflow($this->request, $this->response, $this->traceId, $this->spanId);
             $this->result = $eventManager->dispatchWithReturn($event);
             $this->trace = $this->result['trace'] ?? '';
             $this->err = $this->result['err'] ?? '';
@@ -171,7 +177,9 @@ class Business implements BusinessInterface
             'from' => $this->name,
             'end' => $end * 10000,
             'trace' => $this->trace,
-            'err' => $this->err
+            'err' => $this->err,
+            'spanId' => $this->spanId,
+            'parentId' => $this->parentId
         ), $this->traceId);
 
         return $this;
@@ -185,6 +193,16 @@ class Business implements BusinessInterface
     public function getTraceId() : string
     {
         return hash('sha256', uniqid($this->request->server['request_uri'], true) . random_int(1000000, 9999999));
+    }
+
+    /**
+     * @description get span id
+     *
+     * @return string
+     */
+    public function getSpanId() : string
+    {
+        return md5($this->request->server['request_uri'] . $this->beginTime);
     }
 
     /**

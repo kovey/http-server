@@ -87,7 +87,7 @@ class WorkPipe extends Work
             throw new Exception\PageNotFoundException($e->getMessage());
         }
 
-        $obj = $this->container->get($router->getClassName(), $event->getTraceId(), $keywords['ext'], $event->getRequest(), $event->getResponse(), $this->plugins);
+        $obj = $this->container->get($router->getClassName(), $event->getTraceId(), $event->getSpanId(), $keywords['ext'], $event->getRequest(), $event->getResponse(), $this->plugins);
         if (!$obj instanceof ControllerInterface) {
             throw new Exception\PageNotFoundException("class " . $router->getClassName() . " is not extends Kovey\Web\App\Mvc\Controller\ControllerInterface.");
         }
@@ -253,7 +253,7 @@ class WorkPipe extends Work
         );
 
         try {
-            $result = $this->event->dispatchWithReturn(new Event\Pipeline($req, $res, $router, $event->getTraceId(), $params));
+            $result = $this->event->dispatchWithReturn(new Event\Pipeline($req, $res, $router, $event->getTraceId(), $params, $event->getSpanId()));
             if ($result instanceof ResponseInterface) {
                 $result = $result->toArray();
             }
