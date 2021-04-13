@@ -118,6 +118,7 @@ class Business implements BusinessInterface
         }
 
         $this->response->header('Request-Id', $this->traceId);
+        $this->response->header('Span-Id', $this->spanId);
 
         $cookie = $this->result['cookie'] ?? array();
         foreach ($cookie as $cookie) {
