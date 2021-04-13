@@ -130,7 +130,7 @@ class WorkPipe extends Work
     private function triggerAction(ControllerInterface $obj, Event\Pipeline $event) : ?string
     {
         $router = $event->getRouter();
-        $params = array_merge($this->container->getMethodArguments($router->getClassName(), $router->getActionName(), $event->getTraceId()), $event->getParams());
+        $params = array_merge($this->container->getMethodArguments($router->getClassName(), $router->getActionName(), $event->getTraceId(), $event->getSpanId()), $event->getParams());
         if ($this->event->listened('run_action')) {
             return $this->event->dispatchWithReturn(new Event\RunAction(
                 $obj, $router->getActionName(), $params
