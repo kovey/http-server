@@ -180,7 +180,8 @@ class Business implements BusinessInterface
             'trace' => $this->trace,
             'err' => $this->err,
             'spanId' => $this->spanId,
-            'parentId' => $this->parentId
+            'parentId' => $this->parentId,
+            'header' => $this->request->header
         ), $this->traceId);
 
         return $this;
