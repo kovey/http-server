@@ -358,7 +358,7 @@ class Server
         if (!isset($this->config['monitor_open']) || $this->config['monitor_open'] !== 'Off') {
             $this->monitor(
                 $begin, microtime(true), $request->server['request_uri'] ?? '/', $this->getData($request), $this->getClientIP($request), $time, 
-                $httpCode, $body, $traceId, $result['class'] ?? '', $result['method'] ?? '', $request->server['request_method'], $trace, $err
+                $httpCode, $body, $traceId, $result['class'] ?? '', $result['method'] ?? '', $request->server['request_method'], $trace, $err, $request->header
             );
         }
     }
@@ -406,7 +406,7 @@ class Server
      */
     private function monitor(
         float $begin, float $end, string $uri, string $params, string $ip, int $time, int $code, string $body, string $traceId,
-        string $class, string $method, string $reqMethod, string $trace, string $err
+        string $class, string $method, string $reqMethod, string $trace, string $err, Array $header
     )
     {
         if (!isset($this->events['monitor'])) {
@@ -434,7 +434,8 @@ class Server
                 'from' => $this->config['name'],
                 'end' => $end * 10000,
                 'trace' => $trace,
-                'err' => $err
+                'err' => $err,
+                'header' => $header
             ));
         } catch (\Throwable $e) {
             Logger::writeExceptionLog(__LINE__, __FILE__, $e, $traceId);
