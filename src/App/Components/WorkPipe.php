@@ -24,6 +24,7 @@ use Kovey\Pipeline\Middleware\MiddlewareInterface;
 use Kovey\Event\EventInterface;
 use Kovey\Web\Server\ErrorTemplate;
 use Kovey\Connection\ManualCollectInterface;
+use Kovey\Container\Keyword\Fields;
 
 class WorkPipe extends Work
 {
@@ -93,10 +94,6 @@ class WorkPipe extends Work
         }
         
         $obj->keywords = $keywords;
-        if ($keywords['openTransaction']) {
-            $obj->openTransaction();
-        }
-
         if ($router->isViewDisabled()) {
             $obj->disableView();
         }
@@ -143,16 +140,16 @@ class WorkPipe extends Work
     private function getContent(ControllerInterface $obj, Event\Pipeline $event) : ?string
     {
         try {
-            if (!$obj->isOpenTransaction()) {
+            if ($obj->keywords[Fields::KEYWORD_OPEN_TRANSACTION]) {
                 return $this->triggerAction($obj, $event);
             }
 
-            $obj->database->beginTransaction();
+            $obj->keywords[Fields::KEYWORD_DATABASE]->beginTransaction();
             try {
                 $content = $this->triggerAction($obj, $event);
-                $obj->database->commit();
+                $obj->keywords[Fields::KEYWORD_DATABASE]->commit();
             } catch (\Throwable $e) {
-                $obj->database->rollBack();
+                $obj->keywords[Fields::KEYWORD_DATABASE]->rollBack();
                 throw $e;
             }
         } catch (\Throwable $e) {
