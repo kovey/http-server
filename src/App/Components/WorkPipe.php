@@ -140,7 +140,7 @@ class WorkPipe extends Work
     private function getContent(ControllerInterface $obj, Event\Pipeline $event) : ?string
     {
         try {
-            if ($obj->keywords[Fields::KEYWORD_OPEN_TRANSACTION]) {
+            if (!$obj->keywords[Fields::KEYWORD_OPEN_TRANSACTION]) {
                 return $this->triggerAction($obj, $event);
             }
 
