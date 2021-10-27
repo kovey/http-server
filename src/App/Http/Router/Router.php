@@ -371,8 +371,19 @@ class Router implements RouterInterface
         }
 
         $this->paramFields = $matches[1];
+        $pCount = count($this->paramFields);
         $this->uri = preg_replace($this->pattern, '', $this->uri);
-        $this->uri = str_replace('//', '', $this->uri);
+        if ($pCount == 1) {
+            $this->uri = '/' . trim($this->uri, '/');
+            return $this;
+        }
+
+        $fg = '';
+        for ($i = 0; $i < $pCount; $pCount ++) {
+            $fg .= '/';
+        }
+
+        $this->uri = str_replace($fg, '', $this->uri);
         return $this;
     }
 
