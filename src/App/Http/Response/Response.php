@@ -13,6 +13,14 @@ namespace Kovey\Web\App\Http\Response;
 
 class Response implements ResponseInterface
 {
+    private static Array $fastcgiHeader = array(
+        200 => 'OK',
+        404 => 'Page Not Found',
+        500 => 'Server Internal Error',
+        502 => 'Bad Gateway',
+        504 => 'Timeout'
+    );
+
     /**
      * @description HTTP协议
      *
@@ -175,7 +183,7 @@ class Response implements ResponseInterface
     {
         $out = '';
         if ($fastcgi) {
-            $out .= 'Status: '.$this->status.' '.self::$HTTP_HEADERS[$this->http_status]."\r\n";
+            $out .= 'Status: ' . $this->status . ' ' . (self::$fastcgiHeader[$this->status] ?? 'Other error') . "\r\n";
         } else {
             if (isset($this->head[0])) {
                 $out .= $this->head[0]."\r\n";

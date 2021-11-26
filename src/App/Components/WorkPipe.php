@@ -130,7 +130,7 @@ class WorkPipe extends Work
         $params = array_merge($this->container->getMethodArguments($router->getClassName(), $router->getActionName(), $event->getTraceId(), $event->getSpanId()), $event->getParams());
         if ($this->event->listened('run_action')) {
             return $this->event->dispatchWithReturn(new Event\RunAction(
-                $obj, $router->getActionName(), $params
+                $obj, $router->getActionName(), $params, $event->getTraceId(), $event->getSpanId()
             ));
         }
 

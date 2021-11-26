@@ -30,7 +30,7 @@ class Server extends ServerAbstract
      *
      * @param Array $config
      *
-     * @return Server
+     * @return void
      */
     protected function initServer()
     {

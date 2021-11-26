@@ -22,11 +22,17 @@ class RunAction implements EventInterface
 
     private Array $args;
 
-    public function __construct(ControllerInterface $controller, string $action, Array $args)
+    private string $traceId;
+
+    private string $spanId;
+
+    public function __construct(ControllerInterface $controller, string $action, Array $args, string $traceId, string $spanId)
     {
         $this->controller = $controller;
         $this->action = $action;
         $this->args = $args;
+        $this->traceId = $traceId;
+        $this->spanId = $spanId;
     }
 
     /**
@@ -62,5 +68,15 @@ class RunAction implements EventInterface
     public function getArgs() : Array
     {
         return $this->args;
+    }
+
+    public function getTraceId() : string
+    {
+        return $this->traceId;
+    }
+
+    public function getSpanId() : string
+    {
+        return $this->spanId;
     }
 }
