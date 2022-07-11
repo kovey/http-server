@@ -225,7 +225,7 @@ class WorkPipe extends Work
         }
 
         $uriInfo = $this->getRealUri($req->getUri());
-        $router = $this->routers->getRouter($uriInfo['original'], $reg->getMethod());
+        $router = $this->routers->getRouter($uriInfo['original'], $req->getMethod());
         if ($router == null) {
             $router = $this->routers->getRouter($uriInfo['uri'], $req->getMethod());
         }
