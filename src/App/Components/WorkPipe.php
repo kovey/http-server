@@ -225,7 +225,10 @@ class WorkPipe extends Work
         }
 
         $uriInfo = $this->getRealUri($req->getUri());
-        $router = $this->routers->getRouter($uriInfo['uri'], $req->getMethod());
+        $router = $this->routers->getRouter($uriInfo['original'], $reg->getMethod());
+        if ($router == null) {
+            $router = $this->routers->getRouter($uriInfo['uri'], $req->getMethod());
+        }
         if ($router === null) {
             throw new Exception\MethodDisabledException('router is error, uri: ' . $uriInfo['uri']);
         }
@@ -304,6 +307,7 @@ class WorkPipe extends Work
         if ($count <= 3) {
             return array(
                 'uri' => $uri,
+                'original' => $uri,
                 'params' => $params
             );
         }
@@ -314,6 +318,7 @@ class WorkPipe extends Work
 
         return array(
             'uri' => '/' . $info[1] . '/' . $info[2],
+            'original' => $uri,
             'params' => $params
         );
     }
