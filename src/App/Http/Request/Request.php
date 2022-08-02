@@ -87,6 +87,13 @@ class Request implements RequestInterface
     private SessionInterface $session;
 
     /**
+     * @description context
+     *
+     * @var Context
+     */
+    private Context $context;
+
+    /**
      * @description construct
      *
      * @param Swoole\Http\Request $request
@@ -95,6 +102,7 @@ class Request implements RequestInterface
      */
     public function __construct(\Swoole\Http\Request $request)
     {
+        $this->context = new Context();
         $this->req = $request;
         $this->server = $this->req->server;
         $this->parseData();
@@ -612,5 +620,15 @@ class Request implements RequestInterface
         }
 
         return $this;
+    }
+    
+    /**
+     * @description content
+     *
+     * @return Context
+     */
+    public function getContext() : Context
+    {
+        return $this->context;
     }
 }

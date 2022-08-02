@@ -210,4 +210,11 @@ interface RequestInterface
      * @return RequestInterface
      */
     public function processCors() : RequestInterface;
+
+    /**
+     * @description content
+     *
+     * @return Context
+     */
+    public function getContext() : Context;
 }
