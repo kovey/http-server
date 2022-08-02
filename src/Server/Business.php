@@ -131,7 +131,8 @@ class Business implements BusinessInterface
             $this->body = $this->result['content'] ?? '';
         }
 
-        $this->response->end($this->body);
+        $this->response->write($this->body);
+        $this->response->end();
 
         return $this;
     }
